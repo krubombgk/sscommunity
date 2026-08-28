@@ -149,7 +149,13 @@
 
     <!-- TAB: ai -->
     <div class="tab-content" id="tab-ai">
-      <div class="placeholder-box">AI Vision อ่านฉลากสินค้า<br>กำลังพัฒนา เร็วๆ นี้</div>
+      <div class="card">
+        <div class="section-title" style="margin-top:0;">ถ่ายรูปหรือเลือกรูปฉลากสินค้า</div>
+        <input type="file" id="ai-image-input" accept="image/*" capture="environment" onchange="onAiImageSelected(event)">
+        <div id="ai-preview"></div>
+        <button class="btn btn-primary" id="ai-scan-btn" style="display:none; margin-top:12px;" onclick="scanLabel()">อ่านฉลากด้วย AI</button>
+      </div>
+      <div id="ai-result"></div>
     </div>
 
     <!-- TAB: progress -->
@@ -195,6 +201,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const PROGRAM_START_DATE = "2026-08-25"; // ใช้ปี ค.ศ. เสมอในโค้ด (พ.ศ. 2569 = ค.ศ. 2026)
+const AI_SCAN_FUNCTION_URL = "https://scanlabel-b5z47v766q-as.a.run.app";
 
 const VILLAGES = [
   {no:1,  name:"บ้านไพศาล"},
@@ -485,6 +492,80 @@ async function loadResults(){
     html += `</div>`;
   }
   el.innerHTML = html || `<div class="placeholder-box">ยังไม่มีผลตรวจที่บันทึกไว้</div>`;
+}
+
+// ---------- AI Vision tab ----------
+let aiImageBase64 = null, aiImageMediaType = null;
+
+function onAiImageSelected(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  aiImageMediaType = file.type;
+  const reader = new FileReader();
+  reader.onload = () => {
+    aiImageBase64 = reader.result.split(",")[1];
+    document.getElementById("ai-preview").innerHTML = `<img src="${reader.result}" style="width:100%;border-radius:10px;margin-top:10px;">`;
+    document.getElementById("ai-scan-btn").style.display = "block";
+    document.getElementById("ai-result").innerHTML = "";
+  };
+  reader.readAsDataURL(file);
+}
+
+async function scanLabel(){
+  const btn = document.getElementById("ai-scan-btn");
+  const originalText = btn.textContent;
+  btn.textContent = "กำลังอ่านฉลาก..."; btn.disabled = true;
+  try{
+    const res = await fetch(AI_SCAN_FUNCTION_URL, {
+      method: "POST",
+      headers: {"content-type":"application/json"},
+      body: JSON.stringify({ imageBase64: aiImageBase64, mediaType: aiImageMediaType })
+    });
+    const data = await res.json();
+    if(data.error){
+      showToast("อ่านฉลากไม่สำเร็จ ลองถ่ายใหม่ให้ชัดขึ้น");
+    } else {
+      renderAiConfirmCard(data);
+    }
+  } catch(e){
+    showToast("เชื่อมต่อ AI ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต");
+  }
+  btn.textContent = originalText; btn.disabled = false;
+}
+
+function renderAiConfirmCard(data){
+  const el = document.getElementById("ai-result");
+  el.innerHTML = `
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">ตรวจสอบข้อมูลก่อนบันทึก</div>
+      <div class="note" style="margin-top:0;">AI อาจอ่านผิดพลาดได้ กรุณาเทียบกับฉลากจริงก่อนกดบันทึก</div>
+      <div class="field"><label>ชื่อสินค้า</label><input type="text" id="ai-name" value="${data.productName||''}"></div>
+      <div class="field"><label>พลังงาน (kcal ต่อหน่วยบริโภค)</label><input type="number" id="ai-energy" value="${data.energyKcal ?? ''}"></div>
+      <div class="field"><label>น้ำตาล (กรัม)</label><input type="number" id="ai-sugar" value="${data.sugarG ?? ''}"></div>
+      <div class="field"><label>ไขมัน (กรัม)</label><input type="number" id="ai-fat" value="${data.fatG ?? ''}"></div>
+      <div class="field"><label>โซเดียม (มก.)</label><input type="number" id="ai-sodium" value="${data.sodiumMg ?? ''}"></div>
+      <button class="btn btn-primary" onclick="saveAiProduct()">ยืนยันและบันทึก</button>
+    </div>`;
+}
+
+async function saveAiProduct(){
+  const name = document.getElementById("ai-name").value.trim();
+  if(!name){ showToast("กรุณากรอกชื่อสินค้าก่อนบันทึก"); return; }
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("packagedProducts").add({
+      productName: name,
+      energyKcal: parseFloat(document.getElementById("ai-energy").value) || null,
+      sugarG: parseFloat(document.getElementById("ai-sugar").value) || null,
+      fatG: parseFloat(document.getElementById("ai-fat").value) || null,
+      sodiumMg: parseFloat(document.getElementById("ai-sodium").value) || null,
+      scannedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  showToast("บันทึกข้อมูลสินค้าแล้ว");
+  document.getElementById("ai-image-input").value = "";
+  document.getElementById("ai-preview").innerHTML = "";
+  document.getElementById("ai-result").innerHTML = "";
+  document.getElementById("ai-scan-btn").style.display = "none";
+  aiImageBase64 = null; aiImageMediaType = null;
 }
 
 // ---------- progress tab ----------
