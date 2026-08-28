@@ -125,6 +125,10 @@
         <input type="text" id="new-announcement-title" placeholder="เช่น เคล็ดลับ: ชิมก่อนปรุง">
       </div>
       <div class="field">
+        <label>ลิงก์รูปภาพประกอบ (ไม่บังคับ)</label>
+        <input type="text" id="new-announcement-image" placeholder="https://... (อัปโหลดรูปที่อื่นแล้ววางลิงก์ที่นี่)">
+      </div>
+      <div class="field">
         <label>เนื้อหา</label>
         <textarea id="new-announcement-body" rows="3" style="font-family:'Sarabun',sans-serif; font-size:15px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; width:100%;" placeholder="รายละเอียดประกาศ..."></textarea>
       </div>
@@ -333,6 +337,7 @@ async function loadAnnouncementsAdmin(){
   el.innerHTML = snap.docs.map(d=>{
     const a = d.data();
     return `<div class="card">
+      ${a.imageUrl ? `<img src="${a.imageUrl}" alt="" style="width:100%; border-radius:10px; margin-bottom:8px; display:block; object-fit:cover; max-height:160px;">` : ""}
       <div style="font-family:'Kanit',sans-serif; font-weight:500; font-size:15px;">${a.title||""}</div>
       <div style="font-size:14px; color:var(--ink-muted); margin:4px 0 10px;">${a.body||""}</div>
       <button class="btn btn-ghost" style="color:var(--coral-dark); background:var(--coral-light);" onclick="deleteAnnouncement('${d.id}')">ลบประกาศนี้</button>
@@ -343,12 +348,14 @@ async function loadAnnouncementsAdmin(){
 async function addAnnouncement(){
   const title = document.getElementById("new-announcement-title").value.trim();
   const body = document.getElementById("new-announcement-body").value.trim();
+  const imageUrl = document.getElementById("new-announcement-image").value.trim();
   if(!title){ showToast("กรอกหัวข้อประกาศก่อนนะครับ"); return; }
   await db.collection("announcements").add({
-    title, body, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    title, body, imageUrl: imageUrl || null, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
   document.getElementById("new-announcement-title").value = "";
   document.getElementById("new-announcement-body").value = "";
+  document.getElementById("new-announcement-image").value = "";
   loadAnnouncementsAdmin();
   showToast("เพิ่มประกาศแล้ว");
 }
