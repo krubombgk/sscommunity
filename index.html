@@ -154,7 +154,16 @@
 
     <!-- TAB: progress -->
     <div class="tab-content" id="tab-progress">
-      <div class="placeholder-box">กราฟแนวโน้มพฤติกรรม + ค่าที่วัดจริง<br>กำลังพัฒนา เร็วๆ นี้</div>
+      <div class="section-title">แนวโน้มค่าที่วัดจริง (โซเดียม)</div>
+      <div class="card">
+        <div class="field" style="margin-bottom:12px;">
+          <label>เลือกเมนู</label>
+          <select id="progress-menu-select" onchange="onProgressMenuChange()" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); font-family:'Sarabun',sans-serif; font-size:15px;"></select>
+        </div>
+        <div id="progress-chart"><div class="placeholder-box">เลือกเมนูเพื่อดูกราฟ</div></div>
+      </div>
+      <div class="section-title">ไทม์ไลน์พฤติกรรมรายวัน</div>
+      <div id="progress-timeline" class="card"><div style="color:var(--ink-muted); font-size:14px;">กำลังโหลด...</div></div>
     </div>
 
     <!-- TAB: announcements -->
@@ -297,6 +306,7 @@ function switchTab(name){
   if(navBtn) navBtn.classList.add("active");
   if(name==="results") loadResults();
   if(name==="announcements") loadAnnouncements();
+  if(name==="progress") loadProgress();
 }
 
 async function enterApp(){
@@ -475,6 +485,74 @@ async function loadResults(){
     html += `</div>`;
   }
   el.innerHTML = html || `<div class="placeholder-box">ยังไม่มีผลตรวจที่บันทึกไว้</div>`;
+}
+
+// ---------- progress tab ----------
+async function loadProgress(){
+  const sel = document.getElementById("progress-menu-select");
+  const menusSnap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").orderBy("name").get();
+  if(menusSnap.empty){
+    sel.innerHTML = `<option>ยังไม่มีเมนู</option>`;
+    document.getElementById("progress-chart").innerHTML = `<div class="placeholder-box">ยังไม่มีเมนูที่เจ้าหน้าที่บันทึกไว้</div>`;
+  } else {
+    sel.innerHTML = menusSnap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
+    onProgressMenuChange();
+  }
+  loadBehaviorTimeline();
+}
+
+async function onProgressMenuChange(){
+  const menuId = document.getElementById("progress-menu-select").value;
+  const el = document.getElementById("progress-chart");
+  if(!menuId){ el.innerHTML = `<div class="placeholder-box">เลือกเมนูเพื่อดูกราฟ</div>`; return; }
+  const samplesSnap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(menuId).collection("samples").orderBy("visitDate","asc").get();
+  if(samplesSnap.empty){ el.innerHTML = `<div class="placeholder-box">ยังไม่มีผลตรวจของเมนูนี้</div>`; return; }
+  const points = samplesSnap.docs.map(d=>({ date:d.data().visitDate, value:d.data().sodiumMg, type:d.data().visitType }));
+  el.innerHTML = renderSodiumChartSvg(points);
+}
+
+function renderSodiumChartSvg(points){
+  const w = 320, h = 160, padL = 36, padR = 12, padT = 12, padB = 24;
+  const values = points.map(p=>p.value);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const stepX = points.length > 1 ? (w - padL - padR) / (points.length - 1) : 0;
+  const scaleY = v => padT + (h - padT - padB) * (1 - (v - min) / range);
+
+  const coords = points.map((p,i)=>({ x: padL + stepX*i, y: scaleY(p.value), ...p }));
+  const linePath = coords.map((c,i)=> (i===0?"M":"L") + c.x.toFixed(1) + "," + c.y.toFixed(1)).join(" ");
+
+  const dots = coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="${c.type==='baseline'?'#1E3A5F':'#D85A30'}"/>`).join("");
+  const labels = coords.map((c,i)=> i===0||i===coords.length-1 ? `<text x="${c.x.toFixed(1)}" y="${h-6}" font-size="9" fill="#5F5E5A" text-anchor="middle">${c.date.slice(5)}</text>` : "").join("");
+  const valueLabels = coords.map(c=>`<text x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}" font-size="10" fill="#2C2C2A" text-anchor="middle">${c.value}</text>`).join("");
+
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto;">
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="#E4E0D6"/>
+    <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="#E4E0D6"/>
+    <path d="${linePath}" fill="none" stroke="#0F6E56" stroke-width="2"/>
+    ${dots}${labels}${valueLabels}
+  </svg>
+  <div style="display:flex; gap:14px; font-size:11px; color:var(--ink-muted); margin-top:6px;">
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1E3A5F;margin-right:4px;"></span>ก่อนเริ่ม (Baseline)</span>
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#D85A30;margin-right:4px;"></span>สุ่มตรวจ</span>
+  </div>`;
+}
+
+async function loadBehaviorTimeline(){
+  const el = document.getElementById("progress-timeline");
+  el.innerHTML = `<div style="color:var(--ink-muted); font-size:14px;">กำลังโหลด...</div>`;
+  const snap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("dailyLogs").orderBy("dayNumber","asc").get();
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted); font-size:14px;">ยังไม่มีการบันทึกพฤติกรรม</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>{
+    const l = d.data();
+    return `<div style="padding:10px 0; border-bottom:1px solid var(--line); font-size:13px;">
+      <b>วันที่ ${l.dayNumber}</b> (${d.id}) — ลดเครื่องปรุง: ${l.reducedSaltiness} · ลูกค้าขอเพิ่ม: ${l.customerRequestedMore}<br>
+      รสชาติ: ${(l.tasteFeedback||[]).join(", ")}
+    </div>`;
+  }).join("");
 }
 
 async function loadAnnouncements(){
