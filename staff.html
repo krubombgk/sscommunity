@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Salt Smart Community — โหมดเจ้าหน้าที่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --sand:#FAF6EE; --card:#FFFFFF;
+    --navy:#1E3A5F; --navy-light:#E4EBF2; --navy-dark:#132A45;
+    --lagoon:#0F6E56; --lagoon-light:#E1F5EE; --lagoon-dark:#085041;
+    --coral:#D85A30; --coral-light:#FAECE7; --coral-dark:#993C1D;
+    --ink:#2C2C2A; --ink-muted:#5F5E5A; --line:#E4E0D6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--sand); color:var(--ink); font-family:'Sarabun',sans-serif; padding-bottom:40px;}
+  h1,h2,h3,.disp{font-family:'Kanit',sans-serif; font-weight:600; margin:0;}
+  header{background:var(--navy); color:#fff; padding:20px 20px 24px; border-radius:0 0 20px 20px;}
+  header h1{font-size:19px;}
+  header p{margin:4px 0 0; font-size:13px; color:#C4D2E2;}
+  .badge{display:inline-block; background:rgba(255,255,255,.15); padding:3px 10px; border-radius:999px; font-size:11px; margin-top:6px;}
+  .wrap{max-width:480px; margin:0 auto; padding:0 16px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-top:12px;}
+  .section-title{font-size:13px; color:var(--ink-muted); font-weight:600; margin:18px 0 8px;}
+  .field{margin-bottom:16px;}
+  label{display:block; font-size:13px; color:var(--ink-muted); margin-bottom:6px; font-weight:500;}
+  input[type=text], input[type=number], input[type=date], input[type=tel]{
+    font-family:'Sarabun',sans-serif; font-size:15px; padding:12px 14px; border:1px solid var(--line);
+    border-radius:10px; width:100%; background:#fff; color:var(--ink);
+  }
+  input[type=tel]{font-size:20px; letter-spacing:6px; text-align:center;}
+  .btn{font-family:'Kanit',sans-serif; font-weight:500; font-size:15px; border:none; border-radius:10px; padding:13px 18px; cursor:pointer; width:100%;}
+  .btn-primary{background:var(--navy); color:#fff;}
+  .btn-ghost{background:var(--navy-light); color:var(--navy-dark);}
+  .back-link{font-size:13px; color:var(--navy-dark); font-weight:500; cursor:pointer; display:inline-block; margin-top:2px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .list-btn{
+    width:100%; text-align:left; padding:14px 16px; margin-bottom:8px; border-radius:12px;
+    border:1px solid var(--line); background:#fff; font-family:'Sarabun',sans-serif; font-size:15px;
+    font-weight:500; color:var(--ink); display:flex; justify-content:space-between; align-items:center; cursor:pointer;
+  }
+  .list-btn:active{background:var(--navy-light);}
+  .add-row{display:flex; gap:8px; margin-top:10px;}
+  .big-action{
+    display:block; width:100%; text-align:left; padding:20px; border-radius:14px; border:1px solid var(--line);
+    background:#fff; margin-bottom:12px; cursor:pointer;
+  }
+  .big-action .t{font-family:'Kanit',sans-serif; font-size:16px; font-weight:600; color:var(--navy-dark);}
+  .big-action .s{font-size:13px; color:var(--ink-muted); margin-top:4px;}
+  .toggle-row{display:flex; gap:8px; margin-bottom:16px;}
+  .toggle-row button{
+    flex:1; padding:12px; border-radius:10px; border:1.5px solid var(--line); background:#fff;
+    font-family:'Kanit',sans-serif; font-weight:500; font-size:13px; color:var(--ink-muted); cursor:pointer;
+  }
+  .toggle-row button.active{border-color:var(--navy); background:var(--navy-light); color:var(--navy-dark);}
+  .choice-grid{display:flex; flex-direction:column; gap:8px;}
+  .choice-btn{
+    padding:14px 16px; border-radius:12px; border:1.5px solid var(--line); background:#fff;
+    font-family:'Sarabun',sans-serif; font-size:15px; text-align:left; cursor:pointer; color:var(--ink);
+  }
+  .choice-btn.selected{border-color:var(--navy); background:var(--navy-light); color:var(--navy-dark); font-weight:600;}
+  .gauge-wrap{text-align:center; margin:4px 0 8px;}
+  .gauge-value{font-family:'Kanit',sans-serif; font-size:28px; font-weight:600; margin-top:-38px;}
+  .gauge-label{font-size:12px; color:var(--ink-muted);}
+  .sodium-box{background:var(--coral-light); border-radius:12px; padding:14px 16px; margin-top:4px;}
+  .sodium-box .num{font-family:'Kanit',sans-serif; font-size:22px; font-weight:600; color:var(--coral-dark);}
+  .sodium-box .lbl{font-size:12px; color:var(--coral-dark);}
+  .note{font-size:12px; color:var(--ink-muted); margin-top:8px; line-height:1.6;}
+  .range-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-muted); margin-top:2px;}
+  input[type=range]{width:100%; accent-color:var(--navy);}
+  .toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%); background:var(--navy-dark); color:#fff;
+    padding:10px 18px; border-radius:999px; font-size:13px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60;
+  }
+  .toast.show{opacity:1;}
+  .warn-box{background:var(--coral-light); color:var(--coral-dark); border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- SCREEN: staff pin -->
+<div class="screen active" id="screen-staffpin">
+  <header><div class="wrap"><h1>Salt Smart Community</h1><p>โหมดเจ้าหน้าที่</p><span class="badge">Staff Portal</span></div></header>
+  <div class="wrap">
+    <div class="card">
+      <div class="field">
+        <label>รหัสเจ้าหน้าที่ 4 หลัก</label>
+        <input type="tel" id="staffpin-input" maxlength="4" inputmode="numeric" placeholder="••••">
+      </div>
+      <button class="btn btn-primary" onclick="submitStaffPin()">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: village -->
+<div class="screen" id="screen-village">
+  <header><div class="wrap"><h1>เลือกหมู่บ้าน</h1><span class="badge">Staff Portal</span></div></header>
+  <div class="wrap"><div id="village-list"></div></div>
+</div>
+
+<!-- SCREEN: restaurant -->
+<div class="screen" id="screen-restaurant">
+  <header><div class="wrap"><h1>เลือกร้านค้า</h1><p id="restaurant-village-label"></p></div></header>
+  <div class="wrap">
+    <span class="back-link" onclick="showScreen('village')">‹ เปลี่ยนหมู่บ้าน</span>
+    <div id="restaurant-list" style="margin-top:12px;"></div>
+    <div class="add-row">
+      <input type="text" id="new-restaurant-name" placeholder="ชื่อร้านใหม่...">
+      <button class="btn btn-ghost" style="width:auto;" onclick="addRestaurant()">+ เพิ่ม</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: action select -->
+<div class="screen" id="screen-action">
+  <header><div class="wrap"><h1 id="action-restaurant-name">ร้านค้า</h1><p id="action-village-label"></p></div></header>
+  <div class="wrap">
+    <span class="back-link" onclick="showScreen('restaurant')">‹ เปลี่ยนร้านค้า</span>
+    <div style="margin-top:14px;">
+      <div class="big-action" onclick="startMeasurement()">
+        <div class="t">บันทึกค่าที่วัดได้</div>
+        <div class="s">วัดด้วยเครื่อง ALLWELL — เลือกเมนู แล้วกรอกค่าความเค็ม</div>
+      </div>
+      <div class="big-action" onclick="startBehaviorLog()">
+        <div class="t">บันทึกพฤติกรรมแทนร้าน</div>
+        <div class="s">สำหรับร้านที่จดใส่กระดาษ — เลือกวันที่แล้วกรอกแทน</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: menu select (for measurement) -->
+<div class="screen" id="screen-menu">
+  <header><div class="wrap"><h1>เลือกเมนู</h1><p id="menu-restaurant-label"></p></div></header>
+  <div class="wrap">
+    <span class="back-link" onclick="showScreen('action')">‹ กลับ</span>
+    <div id="menu-list" style="margin-top:12px;"></div>
+    <div class="add-row">
+      <input type="text" id="new-menu-name" placeholder="ชื่อเมนูใหม่...">
+      <button class="btn btn-ghost" style="width:auto;" onclick="addMenu()">+ เพิ่ม</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: measurement form -->
+<div class="screen" id="screen-measure">
+  <header><div class="wrap"><h1 id="measure-title">เมนู</h1><p id="measure-restaurant-label"></p></div></header>
+  <div class="wrap">
+    <span class="back-link" onclick="showScreen('menu')">‹ เปลี่ยนเมนู</span>
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">ประเภทการตรวจ</div>
+      <div class="toggle-row">
+        <button id="visit-baseline" class="active" onclick="setVisitType('baseline')">ก่อนเริ่มโครงการ (Baseline)</button>
+        <button id="visit-spot" onclick="setVisitType('spot_check')">สุ่มตรวจระหว่างโครงการ</button>
+      </div>
+
+      <div class="field">
+        <label>วันที่ตรวจ</label>
+        <input type="date" id="visit-date">
+      </div>
+
+      <div class="gauge-wrap">
+        <svg width="200" height="110" viewBox="0 0 200 110">
+          <path d="M20,100 A80,80 0 0,1 66,27" fill="none" stroke="#639922" stroke-width="14" stroke-linecap="round"/>
+          <path d="M66,27 A80,80 0 0,1 134,27" fill="none" stroke="#EF9F27" stroke-linecap="round" stroke-width="14"/>
+          <path d="M134,27 A80,80 0 0,1 180,100" fill="none" stroke="#E24B4A" stroke-width="14" stroke-linecap="round"/>
+          <line id="needle" x1="100" y1="100" x2="100" y2="30" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="100" cy="100" r="6" fill="#2C2C2A"/>
+        </svg>
+        <div class="gauge-value" id="gauge-value">0.0%</div>
+        <div class="gauge-label">ค่าความเค็มที่วัดได้</div>
+      </div>
+
+      <div class="field">
+        <label>ค่าความเค็มจากเครื่อง ALLWELL SaltTrack (%)</label>
+        <input type="number" id="salt-percent" step="0.1" min="0" max="3" value="1.0" oninput="onSaltChange()">
+      </div>
+      <div class="field">
+        <label>น้ำหนักอาหารต่อหน่วยเสิร์ฟ (กรัม)</label>
+        <input type="number" id="serving-weight" step="10" min="0" value="300" oninput="onSaltChange()">
+      </div>
+
+      <div class="sodium-box">
+        <div class="lbl">ปริมาณโซเดียมโดยประมาณ</div>
+        <div class="num" id="sodium-result">0 มก.</div>
+      </div>
+      <div class="note">คำนวณจากสูตร: โซเดียม (มก.) = ความเค็ม% × น้ำหนัก (ก.) × 3.93</div>
+
+      <div class="section-title">ความหวาน / ความมัน (ประเมินด้วยประสาทสัมผัส)</div>
+      <div class="field">
+        <label>ระดับความหวาน: <span id="sweet-val">3</span>/5</label>
+        <input type="range" id="sweet-level" min="1" max="5" value="3" oninput="document.getElementById('sweet-val').textContent=this.value">
+        <div class="range-labels"><span>หวานน้อย</span><span>หวานมาก</span></div>
+      </div>
+      <div class="field">
+        <label>ระดับความมัน: <span id="fat-val">3</span>/5</label>
+        <input type="range" id="fat-level" min="1" max="5" value="3" oninput="document.getElementById('fat-val').textContent=this.value">
+        <div class="range-labels"><span>มันน้อย</span><span>มันมาก</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveSample()">บันทึกค่าที่วัดได้</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: behavior log (on behalf of restaurant) -->
+<div class="screen" id="screen-behaviorlog">
+  <header><div class="wrap"><h1>บันทึกพฤติกรรมแทนร้าน</h1><p id="behaviorlog-restaurant-label"></p></div></header>
+  <div class="wrap">
+    <span class="back-link" onclick="showScreen('action')">‹ กลับ</span>
+    <div class="card">
+      <div class="field">
+        <label>วันที่ (ตามที่จดในกระดาษ)</label>
+        <input type="date" id="log-date" onchange="onLogDateChange()">
+      </div>
+      <div id="log-day-info" class="note"></div>
+      <div id="log-overwrite-warning"></div>
+      <div id="log-form-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const STAFF_PIN = "0000"; // เปลี่ยนรหัสนี้ก่อนใช้งานจริง — เป็นแค่การกันพลาดเบื้องต้น ไม่ใช่ระบบความปลอดภัยจริง
+const PROGRAM_START_DATE = "2026-08-25";
+
+const VILLAGES = [
+  {no:1,  name:"บ้านไพศาล"},
+  {no:4,  name:"บ้านสังเคิล"},
+  {no:5,  name:"บ้านหนองแสง"},
+  {no:6,  name:"บ้านละลมเวง"},
+  {no:7,  name:"บ้านระแหง"},
+  {no:8,  name:"บ้านละลมพนู", note:"ที่ตั้ง รพ.สต."},
+  {no:12, name:"บ้านหนองจาน"},
+  {no:15, name:"บ้านไพศาลพัฒนา"},
+];
+
+const TASTE_EXCLUSIVE = "อร่อยพอดี (กำลังกลมกล่อม)";
+const TASTE_OPTIONS = [TASTE_EXCLUSIVE, "จืดไปนิด (อยากปรุงเพิ่ม)", "ยังหวานอยู่", "ยังเค็มอยู่", "ยังมันอยู่"];
+const SEASONING_OPTIONS = ["น้ำปลา","ซีอิ๊ว","ผงชูรส","ผงปรุงรส","เกลือ","น้ำตาล","ไม่ได้ใส่เพิ่ม"];
+
+function slugify(text){ return text.normalize("NFC").replace(/\s+/g,"-").replace(/[^\u0E00-\u0E7Fa-zA-Z0-9-]/g,""); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function showToast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
+
+let state = { villageId:null, villageName:null, restaurantId:null, restaurantName:null, menuId:null, menuName:null, visitType:"baseline" };
+let logDraft = { reducedSaltiness:null, seasoningUsed:[], customerRequestedMore:null, tasteFeedback:[] };
+
+function showScreen(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+name).classList.add("active");
+}
+
+function submitStaffPin(){
+  const pin = document.getElementById("staffpin-input").value.trim();
+  if(pin === STAFF_PIN){ renderVillages(); showScreen("village"); }
+  else { showToast("รหัสไม่ถูกต้อง"); }
+}
+
+function renderVillages(){
+  document.getElementById("village-list").innerHTML = VILLAGES.map(v=>`
+    <button class="list-btn" onclick="selectVillage(${v.no}, '${v.name}')">
+      <span>หมู่ ${v.no} ${v.name}${v.note?`<br><span style="font-size:12px;color:var(--ink-muted);font-weight:400;">${v.note}</span>`:""}</span>
+      <span>›</span>
+    </button>`).join("");
+}
+
+async function selectVillage(no, name){
+  state.villageId = `m${no}-${slugify(name)}`;
+  state.villageName = `หมู่ ${no} ${name}`;
+  await db.collection("villages").doc(state.villageId).set({ villageNo:no, name }, {merge:true});
+  document.getElementById("restaurant-village-label").textContent = state.villageName;
+  loadRestaurants();
+  showScreen("restaurant");
+}
+
+async function loadRestaurants(){
+  const el = document.getElementById("restaurant-list");
+  el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">กำลังโหลด...</div>`;
+  const snap = await db.collection("villages").doc(state.villageId).collection("restaurants").orderBy("name").get();
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">ยังไม่มีร้านค้า — เพิ่มร้านใหม่ด้านล่าง</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>`
+    <button class="list-btn" onclick='selectRestaurant(${JSON.stringify(d.id)}, ${JSON.stringify(d.data().name)})'>
+      <span>${d.data().name}</span><span>›</span>
+    </button>`).join("");
+}
+
+async function addRestaurant(){
+  const input = document.getElementById("new-restaurant-name");
+  const name = input.value.trim();
+  if(!name){ showToast("กรอกชื่อร้านก่อนนะครับ"); return; }
+  const id = slugify(name);
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(id)
+    .set({ name, programStartDate: PROGRAM_START_DATE, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+  input.value = "";
+  loadRestaurants();
+  showToast("เพิ่มร้านแล้ว");
+}
+
+function selectRestaurant(id, name){
+  state.restaurantId = id; state.restaurantName = name;
+  document.getElementById("action-restaurant-name").textContent = name;
+  document.getElementById("action-village-label").textContent = state.villageName;
+  showScreen("action");
+}
+
+// ---------- measurement flow ----------
+function startMeasurement(){
+  document.getElementById("menu-restaurant-label").textContent = state.restaurantName;
+  loadMenus();
+  showScreen("menu");
+}
+
+async function loadMenus(){
+  const el = document.getElementById("menu-list");
+  el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">กำลังโหลด...</div>`;
+  const snap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").orderBy("name").get();
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">ยังไม่มีเมนู — เพิ่มเมนูใหม่ด้านล่าง</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>`
+    <button class="list-btn" onclick='selectMenu(${JSON.stringify(d.id)}, ${JSON.stringify(d.data().name)}, ${JSON.stringify(d.data().servingWeightG||300)})'>
+      <span>${d.data().name}</span><span>›</span>
+    </button>`).join("");
+}
+
+async function addMenu(){
+  const input = document.getElementById("new-menu-name");
+  const name = input.value.trim();
+  if(!name){ showToast("กรอกชื่อเมนูก่อนนะครับ"); return; }
+  const id = slugify(name);
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(id).set({ name, servingWeightG:300, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+  input.value = "";
+  loadMenus();
+  showToast("เพิ่มเมนูแล้ว");
+}
+
+function selectMenu(id, name, servingWeightG){
+  state.menuId = id; state.menuName = name;
+  document.getElementById("measure-title").textContent = name;
+  document.getElementById("measure-restaurant-label").textContent = state.restaurantName;
+  document.getElementById("serving-weight").value = servingWeightG;
+  document.getElementById("visit-date").value = todayStr();
+  setVisitType("baseline");
+  onSaltChange();
+  showScreen("measure");
+}
+
+function setVisitType(type){
+  state.visitType = type;
+  document.getElementById("visit-baseline").classList.toggle("active", type==="baseline");
+  document.getElementById("visit-spot").classList.toggle("active", type==="spot_check");
+}
+
+function onSaltChange(){
+  const salt = parseFloat(document.getElementById("salt-percent").value) || 0;
+  const weight = parseFloat(document.getElementById("serving-weight").value) || 0;
+  const sodium = Math.round(salt * weight * 3.93);
+  document.getElementById("sodium-result").textContent = `${sodium.toLocaleString()} มก.`;
+  document.getElementById("gauge-value").textContent = `${salt.toFixed(1)}%`;
+  const clamped = Math.max(0, Math.min(3, salt));
+  const angleDeg = -90 + (clamped/3)*180;
+  const rad = angleDeg * Math.PI/180;
+  const x2 = 100 + 68*Math.cos(rad), y2 = 100 + 68*Math.sin(rad);
+  document.getElementById("needle").setAttribute("x2", x2.toFixed(1));
+  document.getElementById("needle").setAttribute("y2", y2.toFixed(1));
+}
+
+async function saveSample(){
+  const visitDate = document.getElementById("visit-date").value;
+  if(!visitDate){ showToast("กรุณาเลือกวันที่ตรวจ"); return; }
+  const salt = parseFloat(document.getElementById("salt-percent").value) || 0;
+  const weight = parseFloat(document.getElementById("serving-weight").value) || 0;
+  const sodium = Math.round(salt * weight * 3.93);
+  const sweet = parseInt(document.getElementById("sweet-level").value);
+  const fat = parseInt(document.getElementById("fat-level").value);
+
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(state.menuId).collection("samples").add({
+      visitType: state.visitType,
+      visitDate: visitDate,
+      saltPercent: salt,
+      servingWeightG: weight,
+      sodiumMg: sodium,
+      sweetnessLevel: sweet,
+      fatLevel: fat,
+      measuredBy: "เจ้าหน้าที่",
+      measuredAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  showToast("บันทึกผลตรวจเรียบร้อย");
+  showScreen("menu");
+}
+
+// ---------- behavior log on behalf of restaurant ----------
+function startBehaviorLog(){
+  document.getElementById("behaviorlog-restaurant-label").textContent = state.restaurantName;
+  document.getElementById("log-date").value = todayStr();
+  onLogDateChange();
+  showScreen("behaviorlog");
+}
+
+function computeDayNumber(startDateStr, forDateStr){
+  const start = new Date(startDateStr + "T00:00:00");
+  const forDate = new Date(forDateStr + "T00:00:00");
+  return Math.floor((forDate - start) / 86400000) + 1;
+}
+
+async function onLogDateChange(){
+  const dateVal = document.getElementById("log-date").value;
+  if(!dateVal) return;
+  const ref = db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId);
+  const restDoc = await ref.get();
+  const startDate = restDoc.data().programStartDate || PROGRAM_START_DATE;
+  const dayNumber = computeDayNumber(startDate, dateVal);
+  document.getElementById("log-day-info").textContent = dayNumber >= 1 && dayNumber <= 21
+    ? `วันที่ ${dayNumber} จาก 21 ของร้านนี้`
+    : `หมายเหตุ: วันที่นี้อยู่นอกช่วง 21 วันของร้าน (เริ่มโครงการ ${startDate})`;
+
+  const logDoc = await ref.collection("dailyLogs").doc(dateVal).get();
+  const warnEl = document.getElementById("log-overwrite-warning");
+  if(logDoc.exists){
+    const d = logDoc.data();
+    warnEl.innerHTML = `<div class="warn-box">มีการบันทึกของวันนี้ไว้แล้ว (โดย ${d.loggedBy==='staff'?'เจ้าหน้าที่':'ร้านค้า'}) — บันทึกซ้ำจะเขียนทับของเดิม</div>`;
+  } else {
+    warnEl.innerHTML = "";
+  }
+  renderBehaviorForm(dayNumber, logDoc.exists ? logDoc.data() : null);
+}
+
+function renderBehaviorForm(dayNumber, existing){
+  logDraft = existing ? {
+    reducedSaltiness: existing.reducedSaltiness,
+    seasoningUsed: existing.seasoningUsed || [],
+    customerRequestedMore: existing.customerRequestedMore,
+    tasteFeedback: existing.tasteFeedback || [],
+  } : { reducedSaltiness:null, seasoningUsed:[], customerRequestedMore:null, tasteFeedback:[] };
+
+  const body = document.getElementById("log-form-body");
+  body.innerHTML = `
+    <div class="field">
+      <label>1. วันนั้นร้านลดปริมาณเครื่องปรุงเค็มจากปกติหรือไม่?</label>
+      <div class="choice-grid" id="q1"></div>
+    </div>
+    <div class="field">
+      <label>2. วันนั้นปรุงรสด้วยอะไรบ้าง (เลือกได้หลายข้อ)</label>
+      <div class="choice-grid" id="q2"></div>
+    </div>
+    <div class="field">
+      <label>3. วันนั้นมีลูกค้าขอเครื่องปรุงเพิ่มไหม</label>
+      <div class="choice-grid" id="q3"></div>
+    </div>
+    <div class="field">
+      <label>4. สูตรปรับลดหวาน มัน เค็ม ลองชิมแล้ว รสชาติเป็นอย่างไร (เลือกได้หลายข้อ)</label>
+      <div class="choice-grid" id="q4"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveBehaviorLog(${dayNumber})">บันทึกแทนร้าน</button>`;
+
+  renderSingleChoice("q1", ["ลดลง","ใกล้เคียงเดิม","มากกว่าเดิม","ไม่แน่ใจ"], "reducedSaltiness");
+  renderMultiChoice("q2", SEASONING_OPTIONS, "seasoningUsed");
+  renderSingleChoice("q3", ["ไม่มีเลย","มีบ้าง","มีบ่อย"], "customerRequestedMore");
+  renderTasteChoice("q4");
+}
+
+function renderSingleChoice(containerId, options, field){
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(opt=>`
+    <button type="button" class="choice-btn ${logDraft[field]===opt?'selected':''}" onclick="setSingle('${containerId}','${field}','${opt}')">${opt}</button>`).join("");
+}
+function setSingle(containerId, field, value){
+  logDraft[field] = value;
+  document.getElementById(containerId).querySelectorAll(".choice-btn").forEach(b=>{
+    b.classList.toggle("selected", b.textContent.trim()===value);
+  });
+}
+function renderMultiChoice(containerId, options, field){
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(opt=>`
+    <button type="button" class="choice-btn ${logDraft[field].includes(opt)?'selected':''}" onclick="toggleMulti('${containerId}','${field}','${opt}')">${opt}</button>`).join("");
+}
+function toggleMulti(containerId, field, value){
+  const arr = logDraft[field];
+  const idx = arr.indexOf(value);
+  if(idx>-1) arr.splice(idx,1); else arr.push(value);
+  renderMultiChoice(containerId, SEASONING_OPTIONS, field);
+}
+function renderTasteChoice(containerId){
+  const el = document.getElementById(containerId);
+  el.innerHTML = TASTE_OPTIONS.map(opt=>`
+    <button type="button" class="choice-btn ${logDraft.tasteFeedback.includes(opt)?'selected':''}" onclick="toggleTaste('${opt}')">${opt}</button>`).join("");
+}
+function toggleTaste(value){
+  let arr = logDraft.tasteFeedback;
+  if(value === TASTE_EXCLUSIVE){
+    arr = arr.includes(TASTE_EXCLUSIVE) ? [] : [TASTE_EXCLUSIVE];
+  } else {
+    arr = arr.filter(v=>v!==TASTE_EXCLUSIVE);
+    const idx = arr.indexOf(value);
+    if(idx>-1) arr.splice(idx,1); else arr.push(value);
+  }
+  logDraft.tasteFeedback = arr;
+  renderTasteChoice("q4");
+}
+
+async function saveBehaviorLog(dayNumber){
+  if(!logDraft.reducedSaltiness || !logDraft.customerRequestedMore || logDraft.tasteFeedback.length===0){
+    showToast("กรุณาตอบให้ครบทุกข้อก่อนบันทึก");
+    return;
+  }
+  const dateVal = document.getElementById("log-date").value;
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("dailyLogs").doc(dateVal).set({
+      dayNumber,
+      reducedSaltiness: logDraft.reducedSaltiness,
+      seasoningUsed: logDraft.seasoningUsed,
+      customerRequestedMore: logDraft.customerRequestedMore,
+      tasteFeedback: logDraft.tasteFeedback,
+      loggedBy: "staff",
+      loggedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, {merge:true});
+  showToast("บันทึกแทนร้านเรียบร้อย");
+  showScreen("action");
+}
+</script>
+</body>
+</html>
