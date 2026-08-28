@@ -99,6 +99,42 @@
   </div>
 </div>
 
+<!-- SCREEN: staff home -->
+<div class="screen" id="screen-staffhome">
+  <header><div class="wrap"><h1>เมนูเจ้าหน้าที่</h1><span class="badge">Staff Portal</span></div></header>
+  <div class="wrap">
+    <div class="big-action" onclick="goFieldWork()">
+      <div class="t">งานภาคสนาม</div>
+      <div class="s">เลือกหมู่บ้าน/ร้าน — วัดค่า หรือบันทึกพฤติกรรมแทนร้าน</div>
+    </div>
+    <div class="big-action" onclick="goAnnouncementsAdmin()">
+      <div class="t">จัดการประกาศ</div>
+      <div class="s">เพิ่ม/ลบประกาศที่ร้านค้าจะเห็นในแอป</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: announcements admin -->
+<div class="screen" id="screen-announcements-admin">
+  <header><div class="wrap"><h1>จัดการประกาศ</h1><span class="badge">Staff Portal</span></div></header>
+  <div class="wrap">
+    <span class="back-link" onclick="showScreen('staffhome')">‹ กลับเมนูเจ้าหน้าที่</span>
+    <div class="card">
+      <div class="field">
+        <label>หัวข้อประกาศ</label>
+        <input type="text" id="new-announcement-title" placeholder="เช่น เคล็ดลับ: ชิมก่อนปรุง">
+      </div>
+      <div class="field">
+        <label>เนื้อหา</label>
+        <textarea id="new-announcement-body" rows="3" style="font-family:'Sarabun',sans-serif; font-size:15px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; width:100%;" placeholder="รายละเอียดประกาศ..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addAnnouncement()">+ เพิ่มประกาศ</button>
+    </div>
+    <div class="section-title">ประกาศทั้งหมด</div>
+    <div id="announcements-admin-list"></div>
+  </div>
+</div>
+
 <!-- SCREEN: village -->
 <div class="screen" id="screen-village">
   <header><div class="wrap"><h1>เลือกหมู่บ้าน</h1><span class="badge">Staff Portal</span></div></header>
@@ -154,6 +190,10 @@
   <header><div class="wrap"><h1 id="measure-title">เมนู</h1><p id="measure-restaurant-label"></p></div></header>
   <div class="wrap">
     <span class="back-link" onclick="showScreen('menu')">‹ เปลี่ยนเมนู</span>
+
+    <div class="section-title">ประวัติที่บันทึกไว้</div>
+    <div id="sample-history"></div>
+
     <div class="card">
       <div class="section-title" style="margin-top:0;">ประเภทการตรวจ</div>
       <div class="toggle-row">
@@ -271,8 +311,53 @@ function showScreen(name){
 
 function submitStaffPin(){
   const pin = document.getElementById("staffpin-input").value.trim();
-  if(pin === STAFF_PIN){ renderVillages(); showScreen("village"); }
+  if(pin === STAFF_PIN){ showScreen("staffhome"); }
   else { showToast("รหัสไม่ถูกต้อง"); }
+}
+
+function goFieldWork(){
+  renderVillages();
+  showScreen("village");
+}
+
+function goAnnouncementsAdmin(){
+  loadAnnouncementsAdmin();
+  showScreen("announcements-admin");
+}
+
+async function loadAnnouncementsAdmin(){
+  const el = document.getElementById("announcements-admin-list");
+  el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">กำลังโหลด...</div>`;
+  const snap = await db.collection("announcements").orderBy("createdAt","desc").get();
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">ยังไม่มีประกาศ</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>{
+    const a = d.data();
+    return `<div class="card">
+      <div style="font-family:'Kanit',sans-serif; font-weight:500; font-size:15px;">${a.title||""}</div>
+      <div style="font-size:14px; color:var(--ink-muted); margin:4px 0 10px;">${a.body||""}</div>
+      <button class="btn btn-ghost" style="color:var(--coral-dark); background:var(--coral-light);" onclick="deleteAnnouncement('${d.id}')">ลบประกาศนี้</button>
+    </div>`;
+  }).join("");
+}
+
+async function addAnnouncement(){
+  const title = document.getElementById("new-announcement-title").value.trim();
+  const body = document.getElementById("new-announcement-body").value.trim();
+  if(!title){ showToast("กรอกหัวข้อประกาศก่อนนะครับ"); return; }
+  await db.collection("announcements").add({
+    title, body, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  document.getElementById("new-announcement-title").value = "";
+  document.getElementById("new-announcement-body").value = "";
+  loadAnnouncementsAdmin();
+  showToast("เพิ่มประกาศแล้ว");
+}
+
+async function deleteAnnouncement(id){
+  if(!confirm("ยืนยันลบประกาศนี้?")) return;
+  await db.collection("announcements").doc(id).delete();
+  loadAnnouncementsAdmin();
+  showToast("ลบประกาศแล้ว");
 }
 
 function renderVillages(){
@@ -361,7 +446,34 @@ function selectMenu(id, name, servingWeightG){
   document.getElementById("visit-date").value = todayStr();
   setVisitType("baseline");
   onSaltChange();
+  loadSampleHistory();
   showScreen("measure");
+}
+
+async function loadSampleHistory(){
+  const el = document.getElementById("sample-history");
+  el.innerHTML = `<div style="color:var(--ink-muted);font-size:13px;">กำลังโหลด...</div>`;
+  const snap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(state.menuId).collection("samples").orderBy("visitDate","desc").get();
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:13px;">ยังไม่มีประวัติ</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>{
+    const s = d.data();
+    return `<div class="card" style="padding:10px 14px; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:13px;">
+        <b>${s.visitDate}</b> (${s.visitType==='baseline'?'Baseline':'สุ่มตรวจ'})<br>
+        เค็ม ${s.saltPercent}% · โซเดียม ${s.sodiumMg} มก.
+      </div>
+      <button class="btn btn-ghost" style="width:auto; padding:8px 12px; color:var(--coral-dark); background:var(--coral-light); font-size:12px;" onclick="deleteSample('${d.id}')">ลบ</button>
+    </div>`;
+  }).join("");
+}
+
+async function deleteSample(sampleId){
+  if(!confirm("ยืนยันลบตัวอย่างนี้? ลบแล้วกู้คืนไม่ได้")) return;
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(state.menuId).collection("samples").doc(sampleId).delete();
+  loadSampleHistory();
+  showToast("ลบตัวอย่างแล้ว");
 }
 
 function setVisitType(type){
@@ -406,7 +518,7 @@ async function saveSample(){
       measuredAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
   showToast("บันทึกผลตรวจเรียบร้อย");
-  showScreen("menu");
+  loadSampleHistory();
 }
 
 // ---------- behavior log on behalf of restaurant ----------
