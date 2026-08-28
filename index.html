@@ -10,21 +10,22 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
-    --sand:#FAF6EE; --card:#FFFFFF;
-    --lagoon:#0F6E56; --lagoon-light:#E1F5EE; --lagoon-dark:#085041;
-    --coral:#D85A30; --coral-light:#FAECE7; --coral-dark:#993C1D;
-    --ink:#2C2C2A; --ink-muted:#5F5E5A; --line:#E4E0D6;
+    /* จานสีจาก Salt Smart Community brand kit */
+    --sand:#F2F5F7; --card:#FFFFFF;
+    --lagoon:#0D4DB8; --lagoon-light:#E7EEFB; --lagoon-dark:#0A3D93; /* น้ำเงินหลัก */
+    --coral:#0097A7; --coral-light:#E1F4F6; --coral-dark:#00707D;   /* ฟ้าอมเขียว (accent) */
+    --ink:#1F2937; --ink-muted:#6B7280; --line:#E1E4E8;
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--sand); color:var(--ink); font-family:'Sarabun',sans-serif; padding-bottom:100px;}
   h1,h2,h3,.disp{font-family:'Kanit',sans-serif; font-weight:600; margin:0;}
-  header{background:var(--lagoon); color:#fff; padding:20px 20px 24px; border-radius:0 0 20px 20px;}
+  header{background:var(--lagoon); color:#fff; padding:20px 20px 24px; border-radius:0 0 12px 12px;}
   header h1{font-size:19px;}
-  header p{margin:4px 0 0; font-size:13px; color:#CDEBE0;}
+  header p{margin:4px 0 0; font-size:13px; color:#C7D9F5;}
   .wrap{max-width:480px; margin:0 auto; padding:0 16px;}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-top:12px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-top:12px;}
   .list-btn{
-    width:100%; text-align:left; padding:14px 16px; margin-bottom:8px; border-radius:12px;
+    width:100%; text-align:left; padding:14px 16px; margin-bottom:8px; border-radius:8px;
     border:1px solid var(--line); background:#fff; font-family:'Sarabun',sans-serif; font-size:15px;
     font-weight:500; color:var(--ink); display:flex; justify-content:space-between; align-items:center; cursor:pointer;
   }
@@ -44,7 +45,7 @@
   .screen.active{display:block;}
   .choice-grid{display:flex; flex-direction:column; gap:8px;}
   .choice-btn{
-    padding:14px 16px; border-radius:12px; border:1.5px solid var(--line); background:#fff;
+    padding:14px 16px; border-radius:8px; border:1.5px solid var(--line); background:#fff;
     font-family:'Sarabun',sans-serif; font-size:15px; text-align:left; cursor:pointer; color:var(--ink);
   }
   .choice-btn.selected{border-color:var(--lagoon); background:var(--lagoon-light); color:var(--lagoon-dark); font-weight:600;}
@@ -77,7 +78,7 @@
   .tab-content.active{display:block;}
   .placeholder-box{
     text-align:center; padding:40px 20px; color:var(--ink-muted); font-size:14px; background:var(--card);
-    border:1px dashed var(--line); border-radius:14px; margin-top:12px;
+    border:1px dashed var(--line); border-radius:10px; margin-top:12px;
   }
   .announcement{border-bottom:1px solid var(--line); padding:12px 0;}
   .announcement:last-child{border-bottom:none;}
@@ -85,7 +86,7 @@
   .announcement .a-title{font-family:'Kanit',sans-serif; font-weight:500; font-size:15px; margin:2px 0 4px;}
   .announcement .a-body{font-size:14px; color:var(--ink-muted); line-height:1.6;}
   .announcement .a-image{width:100%; border-radius:10px; margin-bottom:8px; display:block; object-fit:cover; max-height:180px;}
-  .home-announcement-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-top:12px;}
+  .home-announcement-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:12px;}
   .home-announcement-card .a-image{width:100%; border-radius:10px; margin-bottom:10px; display:block; object-fit:cover; max-height:180px;}
   .home-announcement-card .a-title{font-family:'Kanit',sans-serif; font-weight:600; font-size:15px; margin-bottom:4px; color:var(--lagoon-dark);}
   .home-announcement-card .a-body{font-size:14px; color:var(--ink-muted); line-height:1.6;}
@@ -97,7 +98,19 @@
 
 <!-- SCREEN: village select -->
 <div class="screen active" id="screen-village">
-  <header><div class="wrap"><h1>Salt Smart Community</h1><p>รพ.สต. ตำบลละลมพะนู</p></div></header>
+  <header><div class="wrap" style="display:flex; align-items:center; gap:12px;">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+      <path d="M8 3h8l1 3H7l1-3z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M6 6h12l-1.2 13.5a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 6z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+      <circle cx="9.5" cy="10" r=".6" fill="#fff"/><circle cx="12" cy="10" r=".6" fill="#fff"/><circle cx="14.5" cy="10" r=".6" fill="#fff"/>
+      <circle cx="9.5" cy="13" r=".6" fill="#fff"/><circle cx="12" cy="13" r=".6" fill="#fff"/><circle cx="14.5" cy="13" r=".6" fill="#fff"/>
+    </svg>
+    <div>
+      <h1>Salt Smart Community</h1>
+      <p style="font-style:italic;">Smart Seasoning. Stronger Community.</p>
+      <p style="margin-top:2px;">รพ.สต. ตำบลละลมพะนู</p>
+    </div>
+  </div></header>
   <div class="wrap"><div class="section-title">เลือกหมู่บ้านของร้านคุณ</div><div id="village-list"></div></div>
 </div>
 
@@ -523,7 +536,8 @@ async function scanLabel(){
     });
     const data = await res.json();
     if(data.error){
-      showToast("อ่านฉลากไม่สำเร็จ ลองถ่ายใหม่ให้ชัดขึ้น");
+      console.error("scanLabel error:", data);
+      showToast(data.reason ? `อ่านฉลากไม่สำเร็จ: ${data.reason}` : "อ่านฉลากไม่สำเร็จ กรุณาลองใหม่");
     } else {
       renderAiConfirmCard(data);
     }
@@ -605,19 +619,19 @@ function renderSodiumChartSvg(points){
   const coords = points.map((p,i)=>({ x: padL + stepX*i, y: scaleY(p.value), ...p }));
   const linePath = coords.map((c,i)=> (i===0?"M":"L") + c.x.toFixed(1) + "," + c.y.toFixed(1)).join(" ");
 
-  const dots = coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="${c.type==='baseline'?'#1E3A5F':'#D85A30'}"/>`).join("");
-  const labels = coords.map((c,i)=> i===0||i===coords.length-1 ? `<text x="${c.x.toFixed(1)}" y="${h-6}" font-size="9" fill="#5F5E5A" text-anchor="middle">${c.date.slice(5)}</text>` : "").join("");
-  const valueLabels = coords.map(c=>`<text x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}" font-size="10" fill="#2C2C2A" text-anchor="middle">${c.value}</text>`).join("");
+  const dots = coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="${c.type==='baseline'?'#0D4DB8':'#0097A7'}"/>`).join("");
+  const labels = coords.map((c,i)=> i===0||i===coords.length-1 ? `<text x="${c.x.toFixed(1)}" y="${h-6}" font-size="9" fill="#6B7280" text-anchor="middle">${c.date.slice(5)}</text>` : "").join("");
+  const valueLabels = coords.map(c=>`<text x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}" font-size="10" fill="#1F2937" text-anchor="middle">${c.value}</text>`).join("");
 
   return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto;">
-    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="#E4E0D6"/>
-    <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="#E4E0D6"/>
-    <path d="${linePath}" fill="none" stroke="#0F6E56" stroke-width="2"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="#E1E4E8"/>
+    <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="#E1E4E8"/>
+    <path d="${linePath}" fill="none" stroke="#0D4DB8" stroke-width="2"/>
     ${dots}${labels}${valueLabels}
   </svg>
   <div style="display:flex; gap:14px; font-size:11px; color:var(--ink-muted); margin-top:6px;">
-    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1E3A5F;margin-right:4px;"></span>ก่อนเริ่ม (Baseline)</span>
-    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#D85A30;margin-right:4px;"></span>สุ่มตรวจ</span>
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0D4DB8;margin-right:4px;"></span>ก่อนเริ่ม (Baseline)</span>
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0097A7;margin-right:4px;"></span>สุ่มตรวจ</span>
   </div>`;
 }
 
