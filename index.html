@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Salt Smart Community — บันทึกข้อมูลร้านค้า</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --sand:#FAF6EE; --card:#FFFFFF;
+    --lagoon:#0F6E56; --lagoon-light:#E1F5EE; --lagoon-dark:#085041;
+    --coral:#D85A30; --coral-light:#FAECE7;
+    --amber:#BA7517; --amber-light:#FAEEDA;
+    --ink:#2C2C2A; --ink-muted:#5F5E5A; --line:#E4E0D6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--sand); color:var(--ink);
+    font-family:'Sarabun',sans-serif; -webkit-font-smoothing:antialiased;
+    padding-bottom:96px;
+  }
+  h1,h2,h3,.disp{font-family:'Kanit',sans-serif; font-weight:600; margin:0;}
+  header{
+    background:var(--lagoon); color:#fff; padding:20px 20px 24px;
+    border-radius:0 0 20px 20px;
+  }
+  header h1{font-size:19px;}
+  header p{margin:4px 0 0; font-size:13px; color:#CDEBE0;}
+  .wrap{max-width:480px; margin:0 auto; padding:0 16px;}
+  .crumbs{display:flex; gap:6px; padding:14px 0 4px; flex-wrap:wrap;}
+  .crumb{
+    font-size:12px; padding:5px 10px; border-radius:999px;
+    background:var(--lagoon-light); color:var(--lagoon-dark); font-weight:500;
+  }
+  .crumb.dim{opacity:.45;}
+  .step{display:none;}
+  .step.active{display:block;}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-top:12px;
+  }
+  .list-btn{
+    width:100%; text-align:left; padding:14px 16px; margin-bottom:8px;
+    border-radius:12px; border:1px solid var(--line); background:#fff;
+    font-family:'Sarabun',sans-serif; font-size:15px; font-weight:500; color:var(--ink);
+    display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer;
+  }
+  .list-btn:active{background:var(--lagoon-light);}
+  .list-btn .sub{font-size:12px; font-weight:400; color:var(--ink-muted); display:block; margin-top:2px;}
+  .list-btn .chev{color:var(--ink-muted); font-size:18px;}
+  .add-row{display:flex; gap:8px; margin-top:10px;}
+  input[type=text], input[type=number]{
+    font-family:'Sarabun',sans-serif; font-size:15px; padding:12px 14px;
+    border:1px solid var(--line); border-radius:10px; width:100%; background:#fff; color:var(--ink);
+  }
+  .btn{
+    font-family:'Kanit',sans-serif; font-weight:500; font-size:15px;
+    border:none; border-radius:10px; padding:12px 18px; cursor:pointer;
+  }
+  .btn-primary{background:var(--lagoon); color:#fff;}
+  .btn-ghost{background:var(--lagoon-light); color:var(--lagoon-dark);}
+  .section-title{font-size:13px; color:var(--ink-muted); font-weight:600; margin:18px 0 8px; letter-spacing:.02em;}
+  .field{margin-bottom:16px;}
+  label{display:block; font-size:13px; color:var(--ink-muted); margin-bottom:6px; font-weight:500;}
+  .phase-toggle{display:flex; gap:8px; margin-bottom:16px;}
+  .phase-toggle button{
+    flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line);
+    background:#fff; font-family:'Kanit',sans-serif; font-weight:500; font-size:14px; color:var(--ink-muted);
+    cursor:pointer;
+  }
+  .phase-toggle button.active{border-color:var(--lagoon); background:var(--lagoon-light); color:var(--lagoon-dark);}
+  input[type=range]{width:100%; accent-color:var(--lagoon);}
+  .range-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-muted); margin-top:2px;}
+  .gauge-wrap{text-align:center; margin:4px 0 8px;}
+  .gauge-value{font-family:'Kanit',sans-serif; font-size:28px; font-weight:600; margin-top:-38px;}
+  .gauge-label{font-size:12px; color:var(--ink-muted);}
+  .sodium-box{
+    background:var(--coral-light); border-radius:12px; padding:14px 16px; margin-top:4px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .sodium-box .num{font-family:'Kanit',sans-serif; font-size:22px; font-weight:600; color:#993C1D;}
+  .sodium-box .lbl{font-size:12px; color:#993C1D;}
+  .note{font-size:12px; color:var(--ink-muted); margin-top:8px; line-height:1.6;}
+  .bottom-bar{
+    position:fixed; bottom:0; left:0; right:0; background:#fff;
+    border-top:1px solid var(--line); padding:12px 16px;
+    display:flex; gap:10px;
+  }
+  .bottom-bar .btn{flex:1;}
+  .toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%);
+    background:var(--lagoon-dark); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:13px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:50;
+  }
+  .toast.show{opacity:1;}
+  .back-link{font-size:13px; color:var(--lagoon-dark); font-weight:500; cursor:pointer; display:inline-block; margin-top:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Salt Smart Community</h1>
+    <p>รพ.สต. ตำบลละลมพะนู — บันทึกข้อมูลร้านค้า</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+
+  <!-- STEP 1: village -->
+  <div class="step active" id="step-village">
+    <div class="section-title">เลือกหมู่บ้าน</div>
+    <div id="village-list"></div>
+  </div>
+
+  <!-- STEP 2: restaurant -->
+  <div class="step" id="step-restaurant">
+    <span class="back-link" onclick="goToStep(1)">‹ เปลี่ยนหมู่บ้าน</span>
+    <div class="section-title">เลือกร้านค้า</div>
+    <div id="restaurant-list"></div>
+    <div class="add-row">
+      <input type="text" id="new-restaurant-name" placeholder="ชื่อร้านใหม่...">
+      <button class="btn btn-ghost" onclick="addRestaurant()">+ เพิ่ม</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: menu -->
+  <div class="step" id="step-menu">
+    <span class="back-link" onclick="goToStep(2)">‹ เปลี่ยนร้านค้า</span>
+    <div class="section-title">เลือกเมนู</div>
+    <div id="menu-list"></div>
+    <div class="add-row">
+      <input type="text" id="new-menu-name" placeholder="ชื่อเมนูใหม่...">
+      <button class="btn btn-ghost" onclick="addMenu()">+ เพิ่ม</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: measurement -->
+  <div class="step" id="step-measure">
+    <span class="back-link" onclick="goToStep(3)">‹ เปลี่ยนเมนู</span>
+    <h2 style="font-size:16px; margin-top:10px;" id="measure-title">เมนู</h2>
+
+    <div class="phase-toggle">
+      <button id="phase-D1" class="active" onclick="setPhase('D1')">D1 · วันแรก</button>
+      <button id="phase-D21" onclick="setPhase('D21')">D21 · หลัง 21 วัน</button>
+    </div>
+
+    <div class="card">
+      <div class="gauge-wrap">
+        <svg width="200" height="110" viewBox="0 0 200 110">
+          <path d="M20,100 A80,80 0 0,1 66,27" fill="none" stroke="#639922" stroke-width="14" stroke-linecap="round"/>
+          <path d="M66,27 A80,80 0 0,1 134,27" fill="none" stroke="#EF9F27" stroke-linecap="round" stroke-width="14"/>
+          <path d="M134,27 A80,80 0 0,1 180,100" fill="none" stroke="#E24B4A" stroke-width="14" stroke-linecap="round"/>
+          <line id="needle" x1="100" y1="100" x2="100" y2="30" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="100" cy="100" r="6" fill="#2C2C2A"/>
+        </svg>
+        <div class="gauge-value" id="gauge-value">0.0%</div>
+        <div class="gauge-label">ค่าความเค็มที่วัดได้</div>
+      </div>
+
+      <div class="field">
+        <label>ค่าความเค็มจากเครื่อง ALLWELL SaltTrack (%)</label>
+        <input type="number" id="salt-percent" step="0.1" min="0" max="3" value="1.0" oninput="onSaltChange()">
+      </div>
+
+      <div class="field">
+        <label>น้ำหนักอาหารต่อหน่วยเสิร์ฟ (กรัม)</label>
+        <input type="number" id="serving-weight" step="10" min="0" value="300" oninput="onSaltChange()">
+      </div>
+
+      <div class="sodium-box">
+        <div>
+          <div class="lbl">ปริมาณโซเดียมโดยประมาณ</div>
+          <div class="num" id="sodium-result">0 มก.</div>
+        </div>
+      </div>
+      <div class="note">คำนวณจากสูตร: โซเดียม (มก.) = ความเค็ม% × น้ำหนัก (ก.) × 3.93 — เป็นค่าประมาณ แม่นยำที่สุดกับอาหารประเภทน้ำ/ของเหลว</div>
+
+      <div class="section-title">ความหวาน / ความมัน (ประเมินด้วยประสาทสัมผัส)</div>
+      <div class="field">
+        <label>ระดับความหวาน: <span id="sweet-val">3</span>/5</label>
+        <input type="range" id="sweet-level" min="1" max="5" value="3" oninput="document.getElementById('sweet-val').textContent=this.value">
+        <div class="range-labels"><span>หวานน้อย</span><span>หวานมาก</span></div>
+      </div>
+      <div class="field">
+        <label>ระดับความมัน: <span id="fat-val">3</span>/5</label>
+        <input type="range" id="fat-level" min="1" max="5" value="3" oninput="document.getElementById('fat-val').textContent=this.value">
+        <div class="range-labels"><span>มันน้อย</span><span>มันมาก</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar step active" id="bar-village">
+  <button class="btn btn-ghost" style="flex:none; padding:12px 16px; visibility:hidden;">‹</button>
+</div>
+<div class="bottom-bar step" id="bar-measure">
+  <button class="btn btn-primary" onclick="saveSample()">บันทึกค่าที่วัดได้</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- Firebase config: แก้ค่าด้านล่างนี้ให้ตรงกับโปรเจกต์ Firebase ใหม่ก่อนใช้งานจริง ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyA2ya_IbMqhTjfBROebL8zfJi8i5wEIFPw",
+  authDomain: "salt-smart-community.firebaseapp.com",
+  projectId: "salt-smart-community",
+  storageBucket: "salt-smart-community.firebasestorage.app",
+  messagingSenderId: "954091528602",
+  appId: "1:954091528602:web:63b97c307cddca71641a23"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const VILLAGES = [
+  {no:1,  name:"บ้านไพศาล"},
+  {no:4,  name:"บ้านสังเคิล"},
+  {no:5,  name:"บ้านหนองแสง"},
+  {no:6,  name:"บ้านละลมเวง"},
+  {no:7,  name:"บ้านระแหง"},
+  {no:8,  name:"บ้านละลมพนู", note:"ที่ตั้ง รพ.สต."},
+  {no:12, name:"บ้านหนองจาน"},
+  {no:15, name:"บ้านไพศาลพัฒนา"},
+];
+
+function slugify(text){
+  return text.normalize("NFC").replace(/\s+/g,"-").replace(/[^\u0E00-\u0E7Fa-zA-Z0-9-]/g,"");
+}
+
+let state = { villageId:null, villageName:null, restaurantId:null, restaurantName:null, menuId:null, menuName:null, phase:"D1" };
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+
+function updateCrumbs(){
+  const parts = [state.villageName, state.restaurantName, state.menuName].filter(Boolean);
+  const el = document.getElementById("crumbs");
+  el.innerHTML = parts.map(p=>`<span class="crumb">${p}</span>`).join("") || "";
+}
+
+function goToStep(n){
+  document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));
+  document.getElementById("bar-village").classList.remove("active");
+  document.getElementById("bar-measure").classList.remove("active");
+  if(n===1){ document.getElementById("step-village").classList.add("active"); document.getElementById("bar-village").classList.add("active"); }
+  if(n===2){ document.getElementById("step-restaurant").classList.add("active"); document.getElementById("bar-village").classList.add("active"); }
+  if(n===3){ document.getElementById("step-menu").classList.add("active"); document.getElementById("bar-village").classList.add("active"); }
+  if(n===4){ document.getElementById("step-measure").classList.add("active"); document.getElementById("bar-measure").classList.add("active"); }
+}
+
+function renderVillages(){
+  const el = document.getElementById("village-list");
+  el.innerHTML = VILLAGES.map(v=>`
+    <button class="list-btn" onclick="selectVillage(${v.no}, '${v.name}')">
+      <span>หมู่ ${v.no} ${v.name}${v.note ? `<span class="sub">${v.note}</span>`:""}</span>
+      <span class="chev">›</span>
+    </button>`).join("");
+}
+
+async function selectVillage(no, name){
+  state.villageId = `m${no}-${slugify(name)}`;
+  state.villageName = `หมู่ ${no} ${name}`;
+  await db.collection("villages").doc(state.villageId).set({ villageNo:no, name, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+  updateCrumbs();
+  loadRestaurants();
+  goToStep(2);
+}
+
+async function loadRestaurants(){
+  const el = document.getElementById("restaurant-list");
+  el.innerHTML = `<div class="note">กำลังโหลด...</div>`;
+  const snap = await db.collection("villages").doc(state.villageId).collection("restaurants").orderBy("name").get();
+  if(snap.empty){ el.innerHTML = `<div class="note">ยังไม่มีร้านค้าในหมู่บ้านนี้ — เพิ่มร้านใหม่ด้านล่าง</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>`
+    <button class="list-btn" onclick="selectRestaurant('${d.id}', '${d.data().name.replace(/'/g,"\\'")}')">
+      <span>${d.data().name}</span><span class="chev">›</span>
+    </button>`).join("");
+}
+
+async function addRestaurant(){
+  const input = document.getElementById("new-restaurant-name");
+  const name = input.value.trim();
+  if(!name){ showToast("กรอกชื่อร้านก่อนนะครับ"); return; }
+  const id = slugify(name);
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(id)
+    .set({ name, createdAt:firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+  input.value = "";
+  loadRestaurants();
+  showToast("เพิ่มร้านแล้ว");
+}
+
+function selectRestaurant(id, name){
+  state.restaurantId = id; state.restaurantName = name;
+  updateCrumbs();
+  loadMenus();
+  goToStep(3);
+}
+
+async function loadMenus(){
+  const el = document.getElementById("menu-list");
+  el.innerHTML = `<div class="note">กำลังโหลด...</div>`;
+  const snap = await db.collection("villages").doc(state.villageId)
+    .collection("restaurants").doc(state.restaurantId).collection("menus").orderBy("name").get();
+  if(snap.empty){ el.innerHTML = `<div class="note">ยังไม่มีเมนูของร้านนี้ — เพิ่มเมนูใหม่ด้านล่าง</div>`; return; }
+  el.innerHTML = snap.docs.map(d=>`
+    <button class="list-btn" onclick='selectMenu(${JSON.stringify(d.id)}, ${JSON.stringify(d.data().name)}, ${JSON.stringify(d.data().servingWeightG||300)})'>
+      <span>${d.data().name}<span class="sub">${d.data().servingWeightG||300} ก./หน่วยเสิร์ฟ</span></span><span class="chev">›</span>
+    </button>`).join("");
+}
+
+async function addMenu(){
+  const input = document.getElementById("new-menu-name");
+  const name = input.value.trim();
+  if(!name){ showToast("กรอกชื่อเมนูก่อนนะครับ"); return; }
+  const id = slugify(name);
+  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(id)
+    .set({ name, servingWeightG:300, status:"baseline", createdAt:firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+  input.value = "";
+  loadMenus();
+  showToast("เพิ่มเมนูแล้ว");
+}
+
+function selectMenu(id, name, servingWeightG){
+  state.menuId = id; state.menuName = name;
+  updateCrumbs();
+  document.getElementById("measure-title").textContent = name;
+  document.getElementById("serving-weight").value = servingWeightG;
+  onSaltChange();
+  goToStep(4);
+}
+
+function setPhase(p){
+  state.phase = p;
+  document.getElementById("phase-D1").classList.toggle("active", p==="D1");
+  document.getElementById("phase-D21").classList.toggle("active", p==="D21");
+}
+
+function onSaltChange(){
+  const salt = parseFloat(document.getElementById("salt-percent").value) || 0;
+  const weight = parseFloat(document.getElementById("serving-weight").value) || 0;
+  const sodium = Math.round(salt * weight * 3.93);
+  document.getElementById("sodium-result").textContent = `${sodium.toLocaleString()} มก.`;
+  document.getElementById("gauge-value").textContent = `${salt.toFixed(1)}%`;
+
+  const clamped = Math.max(0, Math.min(3, salt));
+  const angleDeg = -90 + (clamped/3)*180;
+  const rad = angleDeg * Math.PI/180;
+  const len = 68;
+  const x2 = 100 + len*Math.cos(rad);
+  const y2 = 100 + len*Math.sin(rad);
+  document.getElementById("needle").setAttribute("x2", x2.toFixed(1));
+  document.getElementById("needle").setAttribute("y2", y2.toFixed(1));
+}
+
+async function saveSample(){
+  if(!state.menuId){ showToast("กรุณาเลือกเมนูก่อน"); return; }
+  const salt = parseFloat(document.getElementById("salt-percent").value) || 0;
+  const weight = parseFloat(document.getElementById("serving-weight").value) || 0;
+  const sodium = Math.round(salt * weight * 3.93);
+  const sweet = parseInt(document.getElementById("sweet-level").value);
+  const fat = parseInt(document.getElementById("fat-level").value);
+
+  await db.collection("villages").doc(state.villageId)
+    .collection("restaurants").doc(state.restaurantId)
+    .collection("menus").doc(state.menuId)
+    .collection("samples").add({
+      phase: state.phase,
+      saltPercent: salt,
+      servingWeightG: weight,
+      sodiumMg: sodium,
+      sweetnessLevel: sweet,
+      fatLevel: fat,
+      measuredAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  showToast(`บันทึกข้อมูล ${state.phase} เรียบร้อย`);
+}
+
+renderVillages();
+onSaltChange();
+</script>
+</body>
+</html>
