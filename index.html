@@ -30,6 +30,19 @@
     font-weight:500; color:var(--ink); display:flex; justify-content:space-between; align-items:center; cursor:pointer;
   }
   .list-btn:active{background:var(--lagoon-light);}
+  .village-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;}
+  .village-card{
+    background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:18px 10px 14px;
+    text-align:center; cursor:pointer; font-family:'Sarabun',sans-serif; display:flex; flex-direction:column;
+    align-items:center; gap:6px;
+  }
+  .village-card:active{background:var(--lagoon-light);}
+  .village-card.highlight{border-color:var(--lagoon); background:var(--lagoon-light);}
+  .village-icon{width:40px; height:40px; border-radius:50%; background:var(--lagoon-light); color:var(--lagoon); display:flex; align-items:center; justify-content:center;}
+  .village-card.highlight .village-icon{background:#fff; color:var(--lagoon);}
+  .village-no{font-size:11px; color:var(--ink-muted); font-weight:600;}
+  .village-name{font-size:14px; font-weight:600; color:var(--ink); font-family:'Kanit',sans-serif; line-height:1.3;}
+  .village-badge{font-size:10px; color:var(--lagoon-dark); background:#fff; padding:2px 8px; border-radius:999px; margin-top:2px;}
   .section-title{font-size:13px; color:var(--ink-muted); font-weight:600; margin:18px 0 8px;}
   .field{margin-bottom:16px;}
   label{display:block; font-size:13px; color:var(--ink-muted); margin-bottom:6px; font-weight:500;}
@@ -120,10 +133,7 @@
   <div class="wrap">
     <span class="back-link" onclick="showScreen('village')">‹ เปลี่ยนหมู่บ้าน</span>
     <div id="restaurant-list" style="margin-top:12px;"></div>
-    <div class="add-row" style="display:flex; gap:8px; margin-top:10px;">
-      <input type="text" id="new-restaurant-name" placeholder="ชื่อร้านใหม่...">
-      <button class="btn btn-ghost" style="width:auto;" onclick="addRestaurant()">+ เพิ่ม</button>
-    </div>
+    <div class="note" style="margin-top:10px;">ถ้าร้านของคุณยังไม่มีในรายการ กรุณาติดต่อเจ้าหน้าที่ รพ.สต. เพื่อลงทะเบียนร้านให้</div>
   </div>
 </div>
 
@@ -217,14 +227,15 @@ const PROGRAM_START_DATE = "2026-08-25"; // ใช้ปี ค.ศ. เสม�
 const AI_SCAN_FUNCTION_URL = "https://scanlabel-b5z47v766q-as.a.run.app";
 
 const VILLAGES = [
-  {no:1,  name:"บ้านไพศาล"},
   {no:4,  name:"บ้านสังเคิล"},
   {no:5,  name:"บ้านหนองแสง"},
   {no:6,  name:"บ้านละลมเวง"},
   {no:7,  name:"บ้านระแหง"},
   {no:8,  name:"บ้านละลมพนู", note:"ที่ตั้ง รพ.สต."},
+  {no:9,  name:"บ้านกะโดน"},
+  {no:10, name:"บ้านหนองยาง"},
   {no:12, name:"บ้านหนองจาน"},
-  {no:15, name:"บ้านไพศาลพัฒนา"},
+  {no:16, name:"บ้านหนองสระ"},
 ];
 
 const TASTE_EXCLUSIVE = "อร่อยพอดี (กำลังกลมกล่อม)";
@@ -243,12 +254,17 @@ function showScreen(name){
   document.getElementById("screen-"+name).classList.add("active");
 }
 
+const HOUSE_ICON_SVG = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>`;
+const CLINIC_ICON_SVG = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>`;
+
 function renderVillages(){
-  document.getElementById("village-list").innerHTML = VILLAGES.map(v=>`
-    <button class="list-btn" onclick="selectVillage(${v.no}, '${v.name}')">
-      <span>หมู่ ${v.no} ${v.name}${v.note?`<br><span style="font-size:12px;color:var(--ink-muted);font-weight:400;">${v.note}</span>`:""}</span>
-      <span>›</span>
-    </button>`).join("");
+  document.getElementById("village-list").innerHTML = `<div class="village-grid">` + VILLAGES.map(v=>`
+    <button class="village-card ${v.note?'highlight':''}" onclick="selectVillage(${v.no}, '${v.name}')">
+      <div class="village-icon">${v.note ? CLINIC_ICON_SVG : HOUSE_ICON_SVG}</div>
+      <div class="village-no">หมู่ ${v.no}</div>
+      <div class="village-name">${v.name}</div>
+      ${v.note ? `<div class="village-badge">${v.note}</div>` : ""}
+    </button>`).join("") + `</div>`;
 }
 
 async function selectVillage(no, name){
@@ -264,24 +280,13 @@ async function loadRestaurants(){
   const el = document.getElementById("restaurant-list");
   el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">กำลังโหลด...</div>`;
   const snap = await db.collection("villages").doc(state.villageId).collection("restaurants").orderBy("name").get();
-  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">ยังไม่มีร้านค้า — เพิ่มร้านใหม่ด้านล่าง</div>`; return; }
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">ยังไม่มีร้านค้าในหมู่บ้านนี้ กรุณาติดต่อเจ้าหน้าที่ รพ.สต.</div>`; return; }
   el.innerHTML = snap.docs.map(d=>`
     <button class="list-btn" onclick='selectRestaurant(${JSON.stringify(d.id)}, ${JSON.stringify(d.data().name)}, ${!!d.data().pin})'>
       <span>${d.data().name}</span><span>›</span>
     </button>`).join("");
 }
 
-async function addRestaurant(){
-  const input = document.getElementById("new-restaurant-name");
-  const name = input.value.trim();
-  if(!name){ showToast("กรอกชื่อร้านก่อนนะครับ"); return; }
-  const id = slugify(name);
-  await db.collection("villages").doc(state.villageId).collection("restaurants").doc(id)
-    .set({ name, programStartDate: PROGRAM_START_DATE, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
-  input.value = "";
-  loadRestaurants();
-  showToast("เพิ่มร้านแล้ว");
-}
 
 function selectRestaurant(id, name, hasPin){
   state.restaurantId = id; state.restaurantName = name;
