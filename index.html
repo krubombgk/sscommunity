@@ -157,17 +157,16 @@
   <header><div class="wrap"><h1 id="app-restaurant-name">ร้านค้า</h1><p id="app-village-name"></p></div></header>
 
   <div class="wrap">
-    <!-- TAB: home -->
+    <!-- TAB: home (สถานะสั้นๆ เท่านั้น ไม่มีฟอร์ม) -->
     <div class="tab-content active" id="tab-home">
       <div id="home-announcement"></div>
-      <div class="card" id="home-card">กำลังโหลด...</div>
+      <div class="card" id="home-status-card">กำลังโหลด...</div>
       <span class="back-link" style="margin-top:16px;" onclick="logout()">ออกจากระบบ / เปลี่ยนร้าน</span>
     </div>
 
-    <!-- TAB: results -->
-    <div class="tab-content" id="tab-results">
-      <div class="section-title">ผลตรวจความเค็มโดยเจ้าหน้าที่</div>
-      <div id="results-list"><div class="placeholder-box">กำลังโหลด...</div></div>
+    <!-- TAB: บันทึกวันนี้ -->
+    <div class="tab-content" id="tab-log">
+      <div class="card" id="log-card">กำลังโหลด...</div>
     </div>
 
     <!-- TAB: ai -->
@@ -181,15 +180,16 @@
       <div id="ai-result"></div>
     </div>
 
-    <!-- TAB: progress -->
+    <!-- TAB: ผลตรวจความเค็ม + ความก้าวหน้า (รวมกัน) -->
     <div class="tab-content" id="tab-progress">
-      <div class="section-title">แนวโน้มค่าที่วัดจริง (โซเดียม)</div>
+      <div class="section-title">ผลตรวจความเค็ม + แนวโน้ม</div>
       <div class="card">
         <div class="field" style="margin-bottom:12px;">
           <label>เลือกเมนู</label>
-          <select id="progress-menu-select" onchange="onProgressMenuChange()" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); font-family:'Sarabun',sans-serif; font-size:15px;"></select>
+          <select id="progress-menu-select" onchange="onProgressMenuChange()" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--line); font-family:'Sarabun',sans-serif; font-size:15px;"></select>
         </div>
         <div id="progress-chart"><div class="placeholder-box">เลือกเมนูเพื่อดูกราฟ</div></div>
+        <div id="progress-sample-list" style="margin-top:14px;"></div>
       </div>
       <div class="section-title">ไทม์ไลน์พฤติกรรมรายวัน</div>
       <div id="progress-timeline" class="card"><div style="color:var(--ink-muted); font-size:14px;">กำลังโหลด...</div></div>
@@ -203,10 +203,10 @@
   </div>
 
   <div class="navbar">
-    <button class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="dot"></span><span>วันนี้</span></button>
-    <button class="nav-item" id="nav-results" onclick="switchTab('results')"><span class="dot"></span><span>ผลตรวจ</span></button>
+    <button class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="dot"></span><span>Home</span></button>
+    <button class="nav-item" id="nav-log" onclick="switchTab('log')"><span class="dot"></span><span>บันทึกวันนี้</span></button>
     <button class="nav-center" onclick="switchTab('ai')"><span class="circle">AI</span><span>Vision</span></button>
-    <button class="nav-item" id="nav-progress" onclick="switchTab('progress')"><span class="dot"></span><span>ก้าวหน้า</span></button>
+    <button class="nav-item" id="nav-progress" onclick="switchTab('progress')"><span class="dot"></span><span>ผลตรวจ</span></button>
     <button class="nav-item" id="nav-announcements" onclick="switchTab('announcements')"><span class="dot"></span><span>ประกาศ</span></button>
   </div>
 </div>
@@ -329,7 +329,8 @@ function switchTab(name){
   document.getElementById("tab-"+name).classList.add("active");
   const navBtn = document.getElementById("nav-"+name);
   if(navBtn) navBtn.classList.add("active");
-  if(name==="results") loadResults();
+  if(name==="home") renderHomeStatus();
+  if(name==="log") loadLogTab();
   if(name==="announcements") loadAnnouncements();
   if(name==="progress") loadProgress();
 }
@@ -340,7 +341,7 @@ async function enterApp(){
   showScreen("app");
   switchTab("home");
   await loadHomeAnnouncement();
-  await renderHome();
+  await renderHomeStatus();
 }
 
 async function loadHomeAnnouncement(){
@@ -355,15 +356,19 @@ async function loadHomeAnnouncement(){
   </div>`;
 }
 
-async function renderHome(){
+const HOME_TIPS = [
+  "ชิมก่อนปรุงทุกครั้ง ลดโอกาสใส่เกินความจำเป็นโดยไม่รู้ตัว",
+  "หลีกเลี่ยงใช้เครื่องปรุงหลายชนิดซ้ำซ้อนในเมนูเดียว เลือกอย่างใดอย่างหนึ่งก็พอ",
+  "ลองเลือกผลิตภัณฑ์สูตรโซเดียมน้อยกว่าเมื่อมีให้เลือก",
+];
+
+async function renderHomeStatus(){
   const ref = db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId);
   const doc = await ref.get();
   const startDate = doc.data().programStartDate || PROGRAM_START_DATE;
   const dayNumber = computeDayNumber(startDate);
-  const dateId = todayStr();
-  const logDoc = await ref.collection("dailyLogs").doc(dateId).get();
+  const card = document.getElementById("home-status-card");
 
-  const card = document.getElementById("home-card");
   if(dayNumber < 1){
     card.innerHTML = `<div class="day-badge">ยังไม่เริ่มโครงการ</div><p class="status-line">โครงการจะเริ่มวันที่ ${startDate}</p>`;
     return;
@@ -372,6 +377,41 @@ async function renderHome(){
     card.innerHTML = `<div class="day-badge">ครบ 21 วันแล้ว</div><p class="status-line">ขอบคุณที่ร่วมโครงการครับ</p>`;
     return;
   }
+
+  const logDoc = await ref.collection("dailyLogs").doc(todayStr()).get();
+  const tip = HOME_TIPS[dayNumber % HOME_TIPS.length];
+
+  if(logDoc.exists){
+    card.innerHTML = `
+      <div class="day-badge">วันที่ ${dayNumber} จาก 21</div>
+      <p class="status-line">วันนี้บันทึกแล้ว ✓</p>
+      <div class="note" style="margin-top:12px;">💡 ${tip}</div>`;
+  } else {
+    card.innerHTML = `
+      <div class="day-badge">วันที่ ${dayNumber} จาก 21</div>
+      <p class="status-line">วันนี้ยังไม่ได้บันทึกพฤติกรรม</p>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="switchTab('log')">ไปบันทึกวันนี้</button>
+      <div class="note" style="margin-top:12px;">💡 ${tip}</div>`;
+  }
+}
+
+async function loadLogTab(){
+  const ref = db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId);
+  const doc = await ref.get();
+  const startDate = doc.data().programStartDate || PROGRAM_START_DATE;
+  const dayNumber = computeDayNumber(startDate);
+  const card = document.getElementById("log-card");
+
+  if(dayNumber < 1){
+    card.innerHTML = `<div class="day-badge">ยังไม่เริ่มโครงการ</div><p class="status-line">โครงการจะเริ่มวันที่ ${startDate}</p>`;
+    return;
+  }
+  if(dayNumber > 21){
+    card.innerHTML = `<div class="day-badge">ครบ 21 วันแล้ว</div><p class="status-line">ไม่ต้องบันทึกเพิ่มแล้วครับ</p>`;
+    return;
+  }
+
+  const logDoc = await ref.collection("dailyLogs").doc(todayStr()).get();
   if(logDoc.exists){
     const d = logDoc.data();
     card.innerHTML = `
@@ -381,7 +421,6 @@ async function renderHome(){
       <p style="font-size:14px;">ลดเครื่องปรุง: ${d.reducedSaltiness}<br>ลูกค้าขอเพิ่ม: ${d.customerRequestedMore}<br>รสชาติ: ${(d.tasteFeedback||[]).join(", ")}</p>
       <button class="btn btn-ghost" onclick='renderLogForm(${dayNumber}, ${JSON.stringify(d)})'>แก้ไขการบันทึกวันนี้</button>`;
   } else {
-    card.innerHTML = `<div class="day-badge">วันที่ ${dayNumber} จาก 21</div><p class="status-line">วันนี้ยังไม่ได้บันทึก</p><div id="log-form-slot"></div>`;
     renderLogForm(dayNumber, null);
   }
 }
@@ -400,7 +439,7 @@ function renderLogForm(dayNumber, existing){
     tasteFeedback: existing.tasteFeedback || [],
   } : { reducedSaltiness:null, seasoningUsed:[], customerRequestedMore:null, tasteFeedback:[] };
 
-  const card = document.getElementById("home-card");
+  const card = document.getElementById("log-card");
   card.innerHTML = `
     <div class="day-badge">วันที่ ${dayNumber} จาก 21</div>
     <div class="field">
@@ -486,30 +525,7 @@ async function saveLog(dayNumber){
     loggedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, {merge:true});
   showToast("บันทึกเรียบร้อย");
-  renderHome();
-}
-
-async function loadResults(){
-  const el = document.getElementById("results-list");
-  el.innerHTML = `<div class="placeholder-box">กำลังโหลด...</div>`;
-  const menusSnap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
-    .collection("menus").get();
-  if(menusSnap.empty){ el.innerHTML = `<div class="placeholder-box">ยังไม่มีเมนูที่เจ้าหน้าที่บันทึกไว้</div>`; return; }
-
-  let html = "";
-  for(const menuDoc of menusSnap.docs){
-    const samplesSnap = await menuDoc.ref.collection("samples").orderBy("visitDate","asc").get();
-    if(samplesSnap.empty) continue;
-    html += `<div class="card"><div class="section-title" style="margin-top:0;">${menuDoc.data().name}</div>`;
-    samplesSnap.docs.forEach(s=>{
-      const d = s.data();
-      html += `<div style="font-size:14px; padding:6px 0; border-bottom:1px solid var(--line);">
-        <b>${d.visitDate}</b> (${d.visitType==='baseline'?'ก่อนเริ่ม (D0)':'สุ่มตรวจ'}) — เค็ม ${d.saltPercent}% · โซเดียม ${d.sodiumMg} มก.
-      </div>`;
-    });
-    html += `</div>`;
-  }
-  el.innerHTML = html || `<div class="placeholder-box">ยังไม่มีผลตรวจที่บันทึกไว้</div>`;
+  loadLogTab();
 }
 
 // ---------- AI Vision tab ----------
@@ -595,6 +611,7 @@ async function loadProgress(){
   if(menusSnap.empty){
     sel.innerHTML = `<option>ยังไม่มีเมนู</option>`;
     document.getElementById("progress-chart").innerHTML = `<div class="placeholder-box">ยังไม่มีเมนูที่เจ้าหน้าที่บันทึกไว้</div>`;
+    document.getElementById("progress-sample-list").innerHTML = "";
   } else {
     sel.innerHTML = menusSnap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
     onProgressMenuChange();
@@ -604,13 +621,21 @@ async function loadProgress(){
 
 async function onProgressMenuChange(){
   const menuId = document.getElementById("progress-menu-select").value;
-  const el = document.getElementById("progress-chart");
-  if(!menuId){ el.innerHTML = `<div class="placeholder-box">เลือกเมนูเพื่อดูกราฟ</div>`; return; }
+  const chartEl = document.getElementById("progress-chart");
+  const listEl = document.getElementById("progress-sample-list");
+  if(!menuId){ chartEl.innerHTML = `<div class="placeholder-box">เลือกเมนูเพื่อดูกราฟ</div>`; listEl.innerHTML = ""; return; }
   const samplesSnap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
     .collection("menus").doc(menuId).collection("samples").orderBy("visitDate","asc").get();
-  if(samplesSnap.empty){ el.innerHTML = `<div class="placeholder-box">ยังไม่มีผลตรวจของเมนูนี้</div>`; return; }
+  if(samplesSnap.empty){ chartEl.innerHTML = `<div class="placeholder-box">ยังไม่มีผลตรวจของเมนูนี้</div>`; listEl.innerHTML = ""; return; }
   const points = samplesSnap.docs.map(d=>({ date:d.data().visitDate, value:d.data().sodiumMg, type:d.data().visitType }));
-  el.innerHTML = renderSodiumChartSvg(points);
+  chartEl.innerHTML = renderSodiumChartSvg(points);
+
+  listEl.innerHTML = `<div class="section-title" style="margin-top:0;">รายละเอียดผลตรวจ</div>` + samplesSnap.docs.map(s=>{
+    const d = s.data();
+    return `<div style="font-size:14px; padding:8px 0; border-bottom:1px solid var(--line);">
+      <b>${d.visitDate}</b> (${d.visitType==='baseline'?'ก่อนเริ่ม (D0)':'สุ่มตรวจ'}) — เค็ม ${d.saltPercent}% · โซเดียม ${d.sodiumMg} มก.
+    </div>`;
+  }).join("");
 }
 
 function renderSodiumChartSvg(points){
