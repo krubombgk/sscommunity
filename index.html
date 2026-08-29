@@ -19,7 +19,13 @@
   *{box-sizing:border-box;}
   body{margin:0; background:var(--sand); color:var(--ink); font-family:'Sarabun',sans-serif; padding-bottom:100px;}
   h1,h2,h3,.disp{font-family:'Kanit',sans-serif; font-weight:600; margin:0;}
-  header{background:var(--lagoon); color:#fff; padding:20px 20px 24px; border-radius:0 0 12px 12px;}
+  header{background:var(--lagoon); color:#fff; padding:20px 20px 30px; position:relative; overflow:hidden;}
+  .header-wave{display:block; position:absolute; left:0; bottom:-1px; width:100%; height:20px;}
+  .header-wave path{fill:var(--sand);}
+  .header-badge{
+    position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
   header h1{font-size:19px;}
   header p{margin:4px 0 0; font-size:13px; color:#C7D9F5;}
   .wrap{max-width:480px; margin:0 auto; padding:0 16px;}
@@ -30,6 +36,7 @@
     font-weight:500; color:var(--ink); display:flex; justify-content:space-between; align-items:center; cursor:pointer;
   }
   .list-btn:active{background:var(--lagoon-light);}
+  .shop-icon{width:34px; height:34px; border-radius:50%; background:var(--lagoon-light); color:var(--lagoon); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .village-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;}
   .village-card{
     background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:18px 10px 14px;
@@ -62,6 +69,19 @@
     font-family:'Sarabun',sans-serif; font-size:15px; text-align:left; cursor:pointer; color:var(--ink);
   }
   .choice-btn.selected{border-color:var(--lagoon); background:var(--lagoon-light); color:var(--lagoon-dark); font-weight:600;}
+  .choice-btn{display:flex; align-items:center; gap:10px;}
+  .choice-icon{
+    width:26px; height:26px; border-radius:50%; background:var(--lagoon-light); color:var(--lagoon);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .choice-btn.selected .choice-icon{background:var(--lagoon); color:#fff;}
+  .choice-icon.checkbox{border-radius:6px; border:1.5px solid var(--line); background:#fff;}
+  .choice-btn.selected .choice-icon.checkbox{background:var(--lagoon); border-color:var(--lagoon); color:#fff;}
+  .q-label{display:flex; align-items:flex-start; gap:10px; font-size:14px; font-weight:600; color:var(--ink); margin-bottom:10px;}
+  .q-num{
+    flex-shrink:0; width:24px; height:24px; border-radius:50%; background:var(--lagoon-light); color:var(--lagoon-dark);
+    font-family:'Kanit',sans-serif; font-weight:600; font-size:13px; display:flex; align-items:center; justify-content:center;
+  }
   .day-badge{
     display:inline-block; background:var(--lagoon-light); color:var(--lagoon-dark); font-family:'Kanit',sans-serif;
     font-weight:600; font-size:14px; padding:6px 14px; border-radius:999px; margin-bottom:10px;
@@ -77,9 +97,7 @@
     padding:10px 8px 14px; display:flex; justify-content:space-around; align-items:flex-end; z-index:40;
   }
   .nav-item{display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; cursor:pointer; color:var(--ink-muted); font-family:'Sarabun',sans-serif;}
-  .nav-item .dot{width:22px; height:22px; border-radius:6px; background:var(--line);}
   .nav-item.active{color:var(--lagoon-dark); font-weight:600;}
-  .nav-item.active .dot{background:var(--lagoon);}
   .nav-item span{font-size:11px;}
   .nav-center{display:flex; flex-direction:column; align-items:center; gap:4px; transform:translateY(-16px); background:none; border:none; cursor:pointer;}
   .nav-center .circle{
@@ -99,6 +117,15 @@
   .announcement .a-title{font-family:'Kanit',sans-serif; font-weight:500; font-size:15px; margin:2px 0 4px;}
   .announcement .a-body{font-size:14px; color:var(--ink-muted); line-height:1.6;}
   .announcement .a-image{width:100%; border-radius:10px; margin-bottom:8px; display:block; object-fit:cover; max-height:180px;}
+  .tip-card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:10px;
+    display:flex; align-items:center; gap:12px; cursor:default;
+  }
+  .tip-icon{width:42px; height:42px; border-radius:50%; background:var(--lagoon-light); color:var(--lagoon); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .tip-text{flex:1;}
+  .tip-title{font-family:'Kanit',sans-serif; font-weight:600; font-size:14px; color:var(--lagoon-dark);}
+  .tip-desc{font-size:13px; color:var(--ink-muted); margin-top:2px; line-height:1.5;}
+  .tip-chevron{color:var(--ink-muted); font-size:20px; flex-shrink:0;}
   .home-announcement-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:12px;}
   .home-announcement-card .a-image{width:100%; border-radius:10px; margin-bottom:10px; display:block; object-fit:cover; max-height:180px;}
   .home-announcement-card .a-title{font-family:'Kanit',sans-serif; font-weight:600; font-size:15px; margin-bottom:4px; color:var(--lagoon-dark);}
@@ -123,13 +150,18 @@
       <p style="font-style:italic;">Smart Seasoning. Stronger Community.</p>
       <p style="margin-top:2px;">รพ.สต. ตำบลละลมพะนู</p>
     </div>
-  </div></header>
+  </div>
+  <svg class="header-wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0,10 C100,20 300,0 400,10 L400,20 L0,20 Z"/></svg>
+  </header>
   <div class="wrap"><div class="section-title">เลือกหมู่บ้านของร้านคุณ</div><div id="village-list"></div></div>
 </div>
 
 <!-- SCREEN: restaurant select -->
 <div class="screen" id="screen-restaurant">
-  <header><div class="wrap"><h1>เลือกร้านค้า</h1><p id="restaurant-village-label"></p></div></header>
+  <header><div class="wrap"><h1>เลือกร้านค้า</h1><p id="restaurant-village-label"></p></div>
+    <div class="header-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D4DB8" stroke-width="1.6" stroke-linejoin="round"><path d="M8 3h8l1 3H7l1-3z"/><path d="M6 6h12l-1.2 13.5a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 6z"/><circle cx="9.5" cy="10" r=".6" fill="#0D4DB8"/><circle cx="12" cy="10" r=".6" fill="#0D4DB8"/><circle cx="14.5" cy="10" r=".6" fill="#0D4DB8"/><circle cx="9.5" cy="13" r=".6" fill="#0D4DB8"/><circle cx="12" cy="13" r=".6" fill="#0D4DB8"/><circle cx="14.5" cy="13" r=".6" fill="#0D4DB8"/></svg></div>
+    <svg class="header-wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0,10 C100,20 300,0 400,10 L400,20 L0,20 Z"/></svg>
+  </header>
   <div class="wrap">
     <span class="back-link" onclick="showScreen('village')">‹ เปลี่ยนหมู่บ้าน</span>
     <div id="restaurant-list" style="margin-top:12px;"></div>
@@ -139,7 +171,9 @@
 
 <!-- SCREEN: PIN -->
 <div class="screen" id="screen-pin">
-  <header><div class="wrap"><h1 id="pin-title">รหัสร้านค้า</h1><p id="pin-restaurant-label"></p></div></header>
+  <header><div class="wrap"><h1 id="pin-title">รหัสร้านค้า</h1><p id="pin-restaurant-label"></p></div>
+    <svg class="header-wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0,10 C100,20 300,0 400,10 L400,20 L0,20 Z"/></svg>
+  </header>
   <div class="wrap">
     <span class="back-link" onclick="showScreen('restaurant')">‹ เปลี่ยนร้านค้า</span>
     <div class="card">
@@ -154,7 +188,10 @@
 
 <!-- SCREEN: main app -->
 <div class="screen" id="screen-app">
-  <header><div class="wrap"><h1 id="app-restaurant-name">ร้านค้า</h1><p id="app-village-name"></p></div></header>
+  <header><div class="wrap"><h1 id="app-restaurant-name">ร้านค้า</h1><p id="app-village-name"></p></div>
+    <div class="header-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D4DB8" stroke-width="1.6" stroke-linejoin="round"><path d="M8 3h8l1 3H7l1-3z"/><path d="M6 6h12l-1.2 13.5a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 6z"/><circle cx="9.5" cy="10" r=".6" fill="#0D4DB8"/><circle cx="12" cy="10" r=".6" fill="#0D4DB8"/><circle cx="14.5" cy="10" r=".6" fill="#0D4DB8"/><circle cx="9.5" cy="13" r=".6" fill="#0D4DB8"/><circle cx="12" cy="13" r=".6" fill="#0D4DB8"/><circle cx="14.5" cy="13" r=".6" fill="#0D4DB8"/></svg></div>
+    <svg class="header-wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0,10 C100,20 300,0 400,10 L400,20 L0,20 Z"/></svg>
+  </header>
 
   <div class="wrap">
     <!-- TAB: home (สถานะสั้นๆ เท่านั้น ไม่มีฟอร์ม) -->
@@ -199,15 +236,32 @@
     <div class="tab-content" id="tab-announcements">
       <div class="section-title">ประกาศจาก รพ.สต.</div>
       <div id="announcements-list" class="card"><div style="color:var(--ink-muted); font-size:14px;">กำลังโหลด...</div></div>
+      <div class="section-title">เคล็ดลับสุขภาพ</div>
+      <div id="tips-list"></div>
     </div>
   </div>
 
   <div class="navbar">
-    <button class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="dot"></span><span>Home</span></button>
-    <button class="nav-item" id="nav-log" onclick="switchTab('log')"><span class="dot"></span><span>บันทึกวันนี้</span></button>
-    <button class="nav-center" onclick="switchTab('ai')"><span class="circle">AI</span><span>Vision</span></button>
-    <button class="nav-item" id="nav-progress" onclick="switchTab('progress')"><span class="dot"></span><span>ผลตรวจ</span></button>
-    <button class="nav-item" id="nav-announcements" onclick="switchTab('announcements')"><span class="dot"></span><span>ประกาศ</span></button>
+    <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>หน้าหลัก</span>
+    </button>
+    <button class="nav-item" id="nav-log" onclick="switchTab('log')">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6"/><path d="M8.5 12l2 2 4-4"/><path d="M8.5 17h7"/></svg>
+      <span>บันทึกวันนี้</span>
+    </button>
+    <button class="nav-center" onclick="switchTab('ai')">
+      <span class="circle"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="11" height="15" rx="1.5"/><path d="M8 8h5M8 11h5M8 14h3"/><circle cx="17" cy="17" r="3.2"/><path d="M19.3 19.3L21.5 21.5"/></svg></span>
+      <span>GDA</span>
+    </button>
+    <button class="nav-item" id="nav-progress" onclick="switchTab('progress')">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg>
+      <span>ผลตรวจ</span>
+    </button>
+    <button class="nav-item" id="nav-announcements" onclick="switchTab('announcements')">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"/><path d="M18 9a4 4 0 0 1 0 6"/></svg>
+      <span>ประกาศ</span>
+    </button>
   </div>
 </div>
 
@@ -283,7 +337,10 @@ async function loadRestaurants(){
   if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted);font-size:14px;">ยังไม่มีร้านค้าในหมู่บ้านนี้ กรุณาติดต่อเจ้าหน้าที่ รพ.สต.</div>`; return; }
   el.innerHTML = snap.docs.map(d=>`
     <button class="list-btn" onclick='selectRestaurant(${JSON.stringify(d.id)}, ${JSON.stringify(d.data().name)}, ${!!d.data().pin})'>
-      <span>${d.data().name}</span><span>›</span>
+      <span style="display:flex; align-items:center; gap:12px;">
+        <span class="shop-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/><path d="M3 9h18"/></svg></span>
+        ${d.data().name}
+      </span><span>›</span>
     </button>`).join("");
 }
 
@@ -431,6 +488,12 @@ function computeDayNumber(startDateStr){
   return Math.floor((now - start) / 86400000) + 1;
 }
 
+const ICON_ARROW_DOWN = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"/></svg>`;
+const ICON_ARROW_UP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M6 10l6-6 6 6"/></svg>`;
+const ICON_CHECK = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>`;
+const ICON_QUESTION = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7v.3"/><circle cx="12" cy="17" r=".4" fill="currentColor"/></svg>`;
+const SINGLE_CHOICE_ICONS = {"ลดลง":ICON_ARROW_DOWN, "ใกล้เคียงเดิม":ICON_CHECK, "มากกว่าเดิม":ICON_ARROW_UP, "ไม่แน่ใจ":ICON_QUESTION};
+
 function renderLogForm(dayNumber, existing){
   logDraft = existing ? {
     reducedSaltiness: existing.reducedSaltiness,
@@ -443,33 +506,38 @@ function renderLogForm(dayNumber, existing){
   card.innerHTML = `
     <div class="day-badge">วันที่ ${dayNumber} จาก 21</div>
     <div class="field">
-      <label>1. วันนี้คุณได้ลดปริมาณเครื่องปรุงเค็มจากที่เคยใช้ตามปกติหรือไม่?</label>
+      <div class="q-label"><span class="q-num">1</span><span>วันนี้คุณได้ลดปริมาณเครื่องปรุงเค็มจากที่เคยใช้ตามปกติหรือไม่?</span></div>
       <div class="choice-grid" id="q1"></div>
     </div>
     <div class="field">
-      <label>2. วันนี้ปรุงรสด้วยอะไรบ้าง (เลือกได้หลายข้อ)</label>
+      <div class="q-label"><span class="q-num">2</span><span>วันนี้ปรุงรสด้วยอะไรบ้าง (เลือกได้หลายข้อ)</span></div>
       <div class="choice-grid" id="q2"></div>
     </div>
     <div class="field">
-      <label>3. วันนี้มีลูกค้าขอเครื่องปรุงเพิ่มไหม</label>
+      <div class="q-label"><span class="q-num">3</span><span>วันนี้มีลูกค้าขอเครื่องปรุงเพิ่มไหม</span></div>
       <div class="choice-grid" id="q3"></div>
     </div>
     <div class="field">
-      <label>4. สูตรนี้ปรับลดหวาน มัน เค็ม เพื่อสุขภาพ ลองชิมแล้ว รสชาติเป็นอย่างไรบ้าง (เลือกได้หลายข้อ)</label>
+      <div class="q-label"><span class="q-num">4</span><span>สูตรนี้ปรับลดหวาน มัน เค็ม เพื่อสุขภาพ ลองชิมแล้ว รสชาติเป็นอย่างไรบ้าง (เลือกได้หลายข้อ)</span></div>
       <div class="choice-grid" id="q4"></div>
     </div>
     <button class="btn btn-primary" onclick="saveLog(${dayNumber})">บันทึก</button>`;
 
-  renderSingleChoice("q1", ["ลดลง","ใกล้เคียงเดิม","มากกว่าเดิม","ไม่แน่ใจ"], "reducedSaltiness");
+  renderSingleChoice("q1", ["ลดลง","ใกล้เคียงเดิม","มากกว่าเดิม","ไม่แน่ใจ"], "reducedSaltiness", SINGLE_CHOICE_ICONS);
   renderMultiChoice("q2", SEASONING_OPTIONS, "seasoningUsed");
   renderSingleChoice("q3", ["ไม่มีเลย","มีบ้าง","มีบ่อย"], "customerRequestedMore");
   renderTasteChoice("q4");
 }
 
-function renderSingleChoice(containerId, options, field){
+function renderSingleChoice(containerId, options, field, iconMap){
   const el = document.getElementById(containerId);
-  el.innerHTML = options.map(opt=>`
-    <button type="button" class="choice-btn ${logDraft[field]===opt?'selected':''}" onclick="setSingle('${containerId}','${field}','${opt}')">${opt}</button>`).join("");
+  el.innerHTML = options.map(opt=>{
+    const selected = logDraft[field]===opt;
+    const icon = iconMap && iconMap[opt] ? iconMap[opt] : "";
+    return `<button type="button" class="choice-btn ${selected?'selected':''}" onclick="setSingle('${containerId}','${field}','${opt}')">
+      ${icon ? `<span class="choice-icon">${icon}</span>` : ""}<span>${opt}</span>
+    </button>`;
+  }).join("");
 }
 function setSingle(containerId, field, value){
   logDraft[field] = value;
@@ -478,10 +546,16 @@ function setSingle(containerId, field, value){
   });
 }
 
+const ICON_CHECKBOX = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12.5l2.5 2.5L16 9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 function renderMultiChoice(containerId, options, field){
   const el = document.getElementById(containerId);
-  el.innerHTML = options.map(opt=>`
-    <button type="button" class="choice-btn ${logDraft[field].includes(opt)?'selected':''}" onclick="toggleMulti('${containerId}','${field}','${opt}')">${opt}</button>`).join("");
+  el.innerHTML = options.map(opt=>{
+    const selected = logDraft[field].includes(opt);
+    return `<button type="button" class="choice-btn ${selected?'selected':''}" onclick="toggleMulti('${containerId}','${field}','${opt}')">
+      <span class="choice-icon checkbox">${selected?ICON_CHECKBOX:""}</span><span>${opt}</span>
+    </button>`;
+  }).join("");
 }
 function toggleMulti(containerId, field, value){
   const arr = logDraft[field];
@@ -492,8 +566,12 @@ function toggleMulti(containerId, field, value){
 
 function renderTasteChoice(containerId){
   const el = document.getElementById(containerId);
-  el.innerHTML = TASTE_OPTIONS.map(opt=>`
-    <button type="button" class="choice-btn ${logDraft.tasteFeedback.includes(opt)?'selected':''}" onclick="toggleTaste('${opt}')">${opt}</button>`).join("");
+  el.innerHTML = TASTE_OPTIONS.map(opt=>{
+    const selected = logDraft.tasteFeedback.includes(opt);
+    return `<button type="button" class="choice-btn ${selected?'selected':''}" onclick="toggleTaste('${opt}')">
+      <span class="choice-icon checkbox">${selected?ICON_CHECKBOX:""}</span><span>${opt}</span>
+    </button>`;
+  }).join("");
 }
 function toggleTaste(value){
   let arr = logDraft.tasteFeedback;
@@ -684,14 +762,36 @@ async function loadAnnouncements(){
   const el = document.getElementById("announcements-list");
   el.innerHTML = `<div style="color:var(--ink-muted); font-size:14px;">กำลังโหลด...</div>`;
   const snap = await db.collection("announcements").orderBy("createdAt","desc").limit(20).get();
-  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted); font-size:14px;">ยังไม่มีประกาศ</div>`; return; }
-  el.innerHTML = snap.docs.map(d=>{
-    const a = d.data();
-    return `<div class="announcement">
-      ${a.imageUrl ? `<img class="a-image" src="${a.imageUrl}" alt="">` : ""}
-      <div class="a-title">${a.title||""}</div><div class="a-body">${a.body||""}</div>
-    </div>`;
-  }).join("");
+  if(snap.empty){ el.innerHTML = `<div style="color:var(--ink-muted); font-size:14px;">ยังไม่มีประกาศ</div>`; }
+  else {
+    el.innerHTML = snap.docs.map(d=>{
+      const a = d.data();
+      return `<div class="announcement">
+        ${a.imageUrl ? `<img class="a-image" src="${a.imageUrl}" alt="">` : ""}
+        <div class="a-title">${a.title||""}</div><div class="a-body">${a.body||""}</div>
+      </div>`;
+    }).join("");
+  }
+  renderTipsList();
+}
+
+const ICON_TIP_SALT = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M8 3h8l1 3H7l1-3z"/><path d="M6 6h12l-1.2 13.5a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 6z"/></svg>`;
+const ICON_TIP_BOWL = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 6.5 0 0 1-18 0z"/><path d="M8 11V8.5a4 4 0 0 1 8 0V11"/></svg>`;
+const ICON_TIP_CART = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.2a2 2 0 0 0 2-1.6L21 8H6"/></svg>`;
+
+const TIP_CARDS = [
+  { icon: ICON_TIP_SALT, title: "เคล็ดลับ: ชิมก่อนปรุง", desc: "ชิมรสอาหารก่อนเติมเครื่องปรุงทุกครั้ง ลดโอกาสใส่เกินความจำเป็นโดยไม่รู้ตัว" },
+  { icon: ICON_TIP_BOWL, title: "เคล็ดลับ: ลดการใช้เครื่องปรุงซ้ำซ้อน", desc: "ปรุงรสเพียงพอ ไม่ใส่ซอสหลายชนิดพร้อมกัน เพื่อควบคุมปริมาณโซเดียม" },
+  { icon: ICON_TIP_CART, title: "เคล็ดลับ: เลือกผลิตภัณฑ์โซเดียมน้อยกว่า", desc: "สังเกตฉลากโภชนาการ เลือกซอสหรือเครื่องปรุงสูตรโซเดียมต่ำเมื่อมีให้เลือก" },
+];
+
+function renderTipsList(){
+  document.getElementById("tips-list").innerHTML = TIP_CARDS.map(t=>`
+    <div class="tip-card">
+      <div class="tip-icon">${t.icon}</div>
+      <div class="tip-text"><div class="tip-title">${t.title}</div><div class="tip-desc">${t.desc}</div></div>
+      <div class="tip-chevron">›</div>
+    </div>`).join("");
 }
 
 (function boot(){
