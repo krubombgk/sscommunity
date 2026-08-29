@@ -10,10 +10,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
-    /* จานสีจาก Salt Smart Community brand kit */
+    /* จานสีจาก Salt Smart Community brand kit — แก้ให้ตรงกับ mockup จริง: หลักคือฟ้าอมเขียว ไม่ใช่น้ำเงิน */
     --sand:#F2F5F7; --card:#FFFFFF;
-    --lagoon:#0D4DB8; --lagoon-light:#E7EEFB; --lagoon-dark:#0A3D93; /* น้ำเงินหลัก */
-    --coral:#0097A7; --coral-light:#E1F4F6; --coral-dark:#00707D;   /* ฟ้าอมเขียว (accent) */
+    --lagoon:#0097A7; --lagoon-light:#E0F4F6; --lagoon-dark:#00707D; /* ฟ้าอมเขียวหลัก */
+    --coral:#4CAF50; --coral-light:#EDF7ED; --coral-dark:#2E7D32;   /* เขียว (accent รอง จาก brand kit) */
     --ink:#1F2937; --ink-muted:#6B7280; --line:#E1E4E8;
   }
   *{box-sizing:border-box;}
@@ -138,22 +138,8 @@
 
 <!-- SCREEN: village select -->
 <div class="screen active" id="screen-village">
-  <header><div class="wrap" style="display:flex; align-items:center; gap:12px;">
-    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
-      <path d="M8 3h8l1 3H7l1-3z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
-      <path d="M6 6h12l-1.2 13.5a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 6z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
-      <circle cx="9.5" cy="10" r=".6" fill="#fff"/><circle cx="12" cy="10" r=".6" fill="#fff"/><circle cx="14.5" cy="10" r=".6" fill="#fff"/>
-      <circle cx="9.5" cy="13" r=".6" fill="#fff"/><circle cx="12" cy="13" r=".6" fill="#fff"/><circle cx="14.5" cy="13" r=".6" fill="#fff"/>
-    </svg>
-    <div>
-      <h1>Salt Smart Community</h1>
-      <p style="font-style:italic;">Smart Seasoning. Stronger Community.</p>
-      <p style="margin-top:2px;">รพ.สต. ตำบลละลมพะนู</p>
-    </div>
-  </div>
-  <svg class="header-wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0,10 C100,20 300,0 400,10 L400,20 L0,20 Z"/></svg>
-  </header>
-  <div class="wrap"><div class="section-title">เลือกหมู่บ้านของร้านคุณ</div><div id="village-list"></div></div>
+  <img src="assets/banner-login.png" alt="Salt Smart Community — Smart Seasoning. Stronger Community." style="width:100%; display:block;">
+  <div class="wrap"><div class="section-title" style="margin-top:18px;">เลือกหมู่บ้านของร้านคุณ</div><div id="village-list"></div></div>
 </div>
 
 <!-- SCREEN: restaurant select -->
