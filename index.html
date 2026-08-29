@@ -17,7 +17,7 @@
     --ink:#1F2937; --ink-muted:#6B7280; --line:#E1E4E8;
   }
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--sand); color:var(--ink); font-family:'Sarabun',sans-serif; padding-bottom:100px;}
+  body{margin:0; background:var(--sand); color:var(--ink); font-family:'Sarabun',sans-serif; padding-bottom:112px;}
   h1,h2,h3,.disp{font-family:'Kanit',sans-serif; font-weight:600; margin:0;}
   header{background:var(--lagoon); color:#fff; padding:20px 20px 30px; position:relative; overflow:hidden;}
   .header-wave{display:block; position:absolute; left:0; bottom:-1px; width:100%; height:20px;}
@@ -94,7 +94,7 @@
   .toast.show{opacity:1;}
   .navbar{
     position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line);
-    padding:10px 8px 14px; display:flex; justify-content:space-around; align-items:flex-end; z-index:40;
+    padding:4px 8px 14px; display:flex; justify-content:space-around; align-items:flex-end; z-index:40;
   }
   .nav-item{display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; cursor:pointer; color:var(--ink-muted); font-family:'Sarabun',sans-serif;}
   .nav-item img{filter:grayscale(75%) opacity(0.55);}
@@ -226,11 +226,11 @@
 
   <div class="navbar">
     <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
-      <img src="assets/nav-home.png" width="26" height="26" alt="">
+      <img src="assets/nav-home.png" width="40" height="40" alt="">
       <span>หน้าหลัก</span>
     </button>
     <button class="nav-item" id="nav-log" onclick="switchTab('log')">
-      <img src="assets/nav-log.png" width="26" height="26" alt="">
+      <img src="assets/nav-log.png" width="40" height="40" alt="">
       <span>บันทึกวันนี้</span>
     </button>
     <button class="nav-center" onclick="switchTab('ai')">
@@ -238,11 +238,11 @@
       <span>GDA</span>
     </button>
     <button class="nav-item" id="nav-progress" onclick="switchTab('progress')">
-      <img src="assets/nav-progress.png" width="26" height="26" alt="">
+      <img src="assets/nav-progress.png" width="40" height="40" alt="">
       <span>ผลตรวจ</span>
     </button>
     <button class="nav-item" id="nav-announcements" onclick="switchTab('announcements')">
-      <img src="assets/nav-announce.png" width="26" height="26" alt="">
+      <img src="assets/nav-announce.png" width="40" height="40" alt="">
       <span>ประกาศ</span>
     </button>
   </div>
