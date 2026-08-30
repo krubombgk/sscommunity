@@ -20,14 +20,14 @@
   body{margin:0; background:var(--sand); color:var(--ink); font-family:'Sarabun',sans-serif; padding-bottom:112px;}
   h1,h2,h3,.disp{font-family:'Kanit',sans-serif; font-weight:600; margin:0;}
   header{background:var(--lagoon); color:#fff; padding:20px 20px 30px; position:relative;}
-  .app-header{padding-bottom:70px;}
+  .app-header{padding-bottom:56px;}
   .logout-pill{
     position:absolute; top:0; right:0; z-index:3; display:flex; align-items:center; gap:6px;
     border:1.5px solid rgba(255,255,255,.55); border-radius:999px; padding:7px 14px; background:rgba(255,255,255,.08);
     color:#fff; font-family:'Sarabun',sans-serif; font-size:12.5px; cursor:pointer;
   }
   .app-logo-badge{
-    position:absolute; right:0; top:44px; width:100px; height:100px; border-radius:50%;
+    position:absolute; right:0; top:44px; width:80px; height:80px; border-radius:50%;
     background:#fff; border:3px solid #fff; z-index:4; object-fit:contain;
   }
   .header-wave{display:block; position:absolute; left:0; bottom:-1px; width:100%; height:20px;}
@@ -681,6 +681,8 @@ async function saveAiProduct(){
 }
 
 // ---------- progress tab ----------
+let menuServingWeights = {};
+
 async function loadProgress(){
   const sel = document.getElementById("progress-menu-select");
   const menusSnap = await db.collection("villages").doc(state.villageId).collection("restaurants").doc(state.restaurantId)
@@ -690,10 +692,18 @@ async function loadProgress(){
     document.getElementById("progress-chart").innerHTML = `<div class="placeholder-box">ยังไม่มีเมนูที่เจ้าหน้าที่บันทึกไว้</div>`;
     document.getElementById("progress-sample-list").innerHTML = "";
   } else {
+    menuServingWeights = {};
+    menusSnap.docs.forEach(d=>{ menuServingWeights[d.id] = d.data().servingWeightG || 300; });
     sel.innerHTML = menusSnap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
     onProgressMenuChange();
   }
   loadBehaviorTimeline();
+}
+
+function saltAssessment(saltPercent){
+  if(saltPercent < 0.7) return { color:"#1E8E3E", emoji:"🙂" };
+  if(saltPercent <= 0.9) return { color:"#B58900", emoji:"😐" };
+  return { color:"#D93025", emoji:"☹️" };
 }
 
 async function onProgressMenuChange(){
@@ -705,20 +715,26 @@ async function onProgressMenuChange(){
     .collection("menus").doc(menuId).collection("samples").orderBy("visitDate","asc").get();
   if(samplesSnap.empty){ chartEl.innerHTML = `<div class="placeholder-box">ยังไม่มีผลตรวจของเมนูนี้</div>`; listEl.innerHTML = ""; return; }
   const points = samplesSnap.docs.map(d=>({ date:d.data().visitDate, value:d.data().sodiumMg, type:d.data().visitType }));
-  chartEl.innerHTML = renderSodiumChartSvg(points);
+
+  const servingWeightG = menuServingWeights[menuId] || 300;
+  const lowMg = 0.7 * servingWeightG * 3.93;
+  const highMg = 0.9 * servingWeightG * 3.93;
+  chartEl.innerHTML = renderSodiumChartSvg(points, lowMg, highMg);
 
   listEl.innerHTML = `<div class="section-title" style="margin-top:0;">รายละเอียดผลตรวจ</div>` + samplesSnap.docs.map(s=>{
     const d = s.data();
-    return `<div style="font-size:14px; padding:8px 0; border-bottom:1px solid var(--line);">
-      <b>${d.visitDate}</b> (${d.visitType==='baseline'?'ก่อนเริ่ม (D0)':'สุ่มตรวจ'}) — เค็ม ${d.saltPercent}% · โซเดียม ${d.sodiumMg} มก.
+    const a = saltAssessment(d.saltPercent);
+    return `<div style="font-size:14px; padding:8px 0; border-bottom:1px solid var(--line); color:${a.color};">
+      <b>${d.visitDate}</b> (${d.visitType==='baseline'?'ก่อนเริ่ม (D0)':'สุ่มตรวจ'}) — เค็ม ${d.saltPercent}% · โซเดียม ${d.sodiumMg} มก. ${a.emoji}
     </div>`;
   }).join("");
 }
 
-function renderSodiumChartSvg(points){
+function renderSodiumChartSvg(points, lowMg, highMg){
   const w = 320, h = 160, padL = 36, padR = 12, padT = 12, padB = 24;
   const values = points.map(p=>p.value);
-  const min = Math.min(...values), max = Math.max(...values);
+  const min = 0;
+  const max = Math.max(...values, highMg) * 1.1;
   const range = (max - min) || 1;
   const stepX = points.length > 1 ? (w - padL - padR) / (points.length - 1) : 0;
   const scaleY = v => padT + (h - padT - padB) * (1 - (v - min) / range);
@@ -730,7 +746,14 @@ function renderSodiumChartSvg(points){
   const labels = coords.map((c,i)=> i===0||i===coords.length-1 ? `<text x="${c.x.toFixed(1)}" y="${h-6}" font-size="9" fill="#6B7280" text-anchor="middle">${c.date.slice(5)}</text>` : "").join("");
   const valueLabels = coords.map(c=>`<text x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}" font-size="10" fill="#1F2937" text-anchor="middle">${c.value}</text>`).join("");
 
+  const yZeroPx = scaleY(0), yLowPx = scaleY(lowMg), yHighPx = scaleY(highMg), yTopPx = padT;
+  const zoneBands = `
+    <rect x="${padL}" y="${yLowPx.toFixed(1)}" width="${w-padL-padR}" height="${(yZeroPx-yLowPx).toFixed(1)}" fill="#DFF5E3"/>
+    <rect x="${padL}" y="${yHighPx.toFixed(1)}" width="${w-padL-padR}" height="${(yLowPx-yHighPx).toFixed(1)}" fill="#FFF3C4"/>
+    <rect x="${padL}" y="${yTopPx.toFixed(1)}" width="${w-padL-padR}" height="${(yHighPx-yTopPx).toFixed(1)}" fill="#FBDADA"/>`;
+
   return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto;">
+    ${zoneBands}
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="#E1E4E8"/>
     <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="#E1E4E8"/>
     <path d="${linePath}" fill="none" stroke="#0D4DB8" stroke-width="2"/>
